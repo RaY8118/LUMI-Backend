@@ -18,6 +18,7 @@ def register():
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
+    role = data.get('value')
 
     # Hash the password
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -35,7 +36,8 @@ def register():
     new_user = {
         "name": name,
         "email": email,
-        "password": hashed_password
+        "password": hashed_password,
+        "role":role
     }
     collection.insert_one(new_user)
 
