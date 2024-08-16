@@ -1,6 +1,7 @@
 from flask import jsonify
-from app import db, collection, bcrypt
+from app import mongo, bcrypt
 
+user_collection = mongo.db.users
 
 def register_user(request):
     data = request.json
@@ -10,7 +11,7 @@ def register_user(request):
     role = data.get('role')
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    existing_user = collection.find_one({"email": email})
+    existing_user = user_collection.find_one({"email": email})
 
     if existing_user:
         return jsonify({"status": "error", "message": "User already exists"}), 400
@@ -21,7 +22,7 @@ def register_user(request):
         "password": hashed_password,
         "role": role
     }
-    collection.insert_one(new_user)
+    user_collection.insert_one(new_user)
 
     return jsonify({"status": "success", "message": "Form submitted successfully!!"}), 201
 
@@ -31,7 +32,7 @@ def login_user(request):
     email = data.get('email')
     password = data.get('password')
 
-    user = collection.find_one({"email": email})
+    user = user_collection.find_one({"email": email})
 
     if not user:
         return jsonify({"status": "error", "message": "Invalid Credentials"}), 401
