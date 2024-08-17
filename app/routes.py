@@ -2,6 +2,7 @@ from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user
 from app.img_recog import process_image
+from app.location import save_location
 from PIL import Image
 import io
 
@@ -48,3 +49,8 @@ def process_image_route():
 
     except ValueError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
+
+
+@app.route("/homelocation", methods=["POST"])
+def homelocation():
+    return save_location(request)
