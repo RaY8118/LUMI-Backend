@@ -3,6 +3,7 @@ from flask import request, jsonify, send_file
 from app.auth import register_user, login_user
 from app.img_recog import process_image
 from app.location import save_location
+from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from PIL import Image
 import io
 
@@ -54,3 +55,23 @@ def process_image_route():
 @app.route("/homelocation", methods=["POST"])
 def homelocation():
     return save_location(request)
+
+
+@app.route("/getreminders", methods=["GET"])
+def getreminders():
+    return get_reminders(request)
+
+
+@app.route("/postreminders", methods=["POST"])
+def postreminders():
+    return post_reminders(request)
+
+
+@app.route("/deletereminders", methods=["DELETE"])
+def deletereminders():
+    return delete_reminders(request)
+
+
+@app.route("/updatereminders", methods=["POST"])
+def updatereminders():
+    return update_reminders(request)
