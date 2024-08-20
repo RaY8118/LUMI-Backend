@@ -23,7 +23,8 @@ def recognize_face(encoding_to_check):
         return studentIds[best_match_index]
     else:
         return "Unknown"
-    
+
+# TODO: send the name of the identified person along with the image to the frontend
 def process_image(image_file):
     # Read the image file
     new_image = cv2.imdecode(np.fromstring(image_file.read(), np.uint8), cv2.IMREAD_COLOR)

@@ -36,7 +36,7 @@ def get_reminders(request):
     user_reminders = list(reminders_collection.find({"userId": userId}))
 
     if not user_reminders:
-        return jsonify({"status": "error", "message": "No reminders for this user"}), 401
+        return jsonify({"status": "error", "message": "No reminders for this user"}), 404
 
     reminder_list = [{
         "_id": str(r["_id"]),

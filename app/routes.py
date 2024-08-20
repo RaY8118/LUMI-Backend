@@ -6,6 +6,7 @@ from app.location import save_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from PIL import Image
 import io
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 @app.route("/register", methods=["POST"])
@@ -33,6 +34,7 @@ def resize_image(image_file):
 
 
 @app.route("/process-image", methods=["POST"])
+@jwt_required()
 def process_image_route():
     if 'image' not in request.files:
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
@@ -57,7 +59,7 @@ def homelocation():
     return save_location(request)
 
 
-@app.route("/getreminders", methods=["GET"])
+@app.route("/getreminders", methods=["POST"])
 def getreminders():
     return get_reminders(request)
 
@@ -75,3 +77,23 @@ def deletereminders():
 @app.route("/updatereminders", methods=["POST"])
 def updatereminders():
     return update_reminders(request)
+
+
+@app.route('/protected', methods=['POST'])
+@jwt_required()
+def protected():
+    # Extract the identity from the token
+    current_user = get_jwt_identity()
+    
+    # Cross-verify the information
+    user_id = current_user.get('userId')
+    user_role = current_user.get('role')
+    name_role = current_user.get('name')
+    email_role = current_user.get('email')
+    mobile_role = current_user.get('mobile')
+
+    # Example check
+    if user_id and user_role:
+        return jsonify({"status": "success", "userId": user_id, "role": user_role, "name": name_role, "email":email_role, "mobile":mobile_role}), 200
+    else:
+        return jsonify({"status": "error", "message": "Invalid token data"}), 401
