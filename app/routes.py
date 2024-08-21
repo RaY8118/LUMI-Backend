@@ -69,7 +69,7 @@ def postreminders():
     return post_reminders(request)
 
 
-@app.route("/deletereminders", methods=["DELETE"])
+@app.route("/deletereminders", methods=["POST"])
 def deletereminders():
     return delete_reminders(request)
 
