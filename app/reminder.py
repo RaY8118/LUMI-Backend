@@ -1,15 +1,14 @@
 from flask import jsonify
 from app import mongo
 from bson import ObjectId
+import uuid
 
 reminders_collection = mongo.db.reminders
 
 
 def generate_reminder_id():
-    prefix = "REMID"
-    count = reminders_collection.count_documents({})
-    number = count + 1
-    return f"{prefix}{str(number).zfill(3)}"
+    unique_id = uuid.uuid4().hex[:8] 
+    return f"{unique_id.upper()}"
 
 
 def post_reminders(request):

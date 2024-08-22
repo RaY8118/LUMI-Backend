@@ -20,34 +20,25 @@ def login():
 
 
 def resize_image(image_file):
-    # Open the image using Pillow
     image = Image.open(image_file)
-    # Resize the image to 640x480
     resized_image = image.resize((600, 720))
-
-    # Save the resized image to a BytesIO stream
     image_stream = io.BytesIO()
     resized_image.save(image_stream, format='JPEG')
-    image_stream.seek(0)  # Reset the stream position to the start
+    image_stream.seek(0)
 
     return image_stream
 
 
 @app.route("/process-image", methods=["POST"])
-@jwt_required()
 def process_image_route():
     if 'image' not in request.files:
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
 
     image_file = request.files['image']
     try:
-        # Resize the image
         resized_image_stream = resize_image(image_file)
-
-        # Now process the resized image (modify your process_image function as needed)
         processed_image_stream = process_image(resized_image_stream)
 
-        # Send the processed image as a response
         return send_file(processed_image_stream, mimetype='image/jpeg', as_attachment=False, download_name='processed_image.jpg')
 
     except ValueError as e:
@@ -82,18 +73,14 @@ def updatereminders():
 @app.route('/protected', methods=['POST'])
 @jwt_required()
 def protected():
-    # Extract the identity from the token
     current_user = get_jwt_identity()
-    
-    # Cross-verify the information
     user_id = current_user.get('userId')
     user_role = current_user.get('role')
     name_role = current_user.get('name')
     email_role = current_user.get('email')
     mobile_role = current_user.get('mobile')
 
-    # Example check
     if user_id and user_role:
-        return jsonify({"status": "success", "userId": user_id, "role": user_role, "name": name_role, "email":email_role, "mobile":mobile_role}), 200
+        return jsonify({"status": "success", "userId": user_id, "role": user_role, "name": name_role, "email": email_role, "mobile": mobile_role}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid token data"}), 401

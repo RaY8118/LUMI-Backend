@@ -3,16 +3,15 @@ from app import mongo, bcrypt
 from app import jwt
 from werkzeug.security import check_password_hash
 from flask_jwt_extended import create_access_token
+import uuid
 
-# TODO: add JWT authentication
 user_collection = mongo.db.users
 
 
 def generate_custom_id():
     prefix = "USID"
-    count = user_collection.count_documents({})
-    number = count + 1
-    return f"{prefix}{str(number).zfill(3)}"
+    unique_id = uuid.uuid4().hex[:4]
+    return f"{prefix}{unique_id.upper()}"
 
 
 def register_user(request):
