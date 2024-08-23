@@ -11,12 +11,20 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 @app.route("/register", methods=["POST"])
 def register():
-    return register_user(request)
+    try:
+        response = register_user(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Registration failed, please try again'})
 
 
 @app.route("/login", methods=["POST"])
 def login():
-    return login_user(request)
+    try:
+        respone = login_user(request)
+        return respone
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
 
 
 def resize_image(image_file):
@@ -52,22 +60,38 @@ def homelocation():
 
 @app.route("/getreminders", methods=["POST"])
 def getreminders():
-    return get_reminders(request)
+    try:
+        response = get_reminders(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to retrieve reminders. Please try again'})
 
 
 @app.route("/postreminders", methods=["POST"])
 def postreminders():
-    return post_reminders(request)
+    try:
+        response = post_reminders(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to post reminders. Please try again'})
 
 
 @app.route("/deletereminders", methods=["POST"])
 def deletereminders():
-    return delete_reminders(request)
+    try:
+        response = delete_reminders(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again'})
 
 
 @app.route("/updatereminders", methods=["POST"])
 def updatereminders():
-    return update_reminders(request)
+    try:
+        response = update_reminders(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again'})
 
 
 @app.route('/protected', methods=['POST'])

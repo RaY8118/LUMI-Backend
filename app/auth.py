@@ -1,7 +1,5 @@
 from flask import jsonify
 from app import mongo, bcrypt
-from app import jwt
-from werkzeug.security import check_password_hash
 from flask_jwt_extended import create_access_token
 import uuid
 
@@ -40,7 +38,7 @@ def register_user(request):
     }
     user_collection.insert_one(new_user)
 
-    return jsonify({"status": "success", "message": "Form submitted successfully!!"}), 201
+    return jsonify({"status": "success", "message": "User created successfully!!"}), 201
 
 
 def login_user(request):
