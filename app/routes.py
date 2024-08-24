@@ -1,7 +1,7 @@
 from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user
-from app.img_recog import process_image
+from app.img_recog import send_name, draw_box
 from app.location import save_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from PIL import Image
@@ -37,17 +37,29 @@ def resize_image(image_file):
     return image_stream
 
 
-@app.route("/process-image", methods=["POST"])
-def process_image_route():
+@app.route("/send-name", methods=["POST"])
+def identify_name():
     if 'image' not in request.files:
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
 
     image_file = request.files['image']
     try:
-        resized_image_stream = resize_image(image_file)
-        processed_image_stream = process_image(resized_image_stream)
+        identified_name = send_name(image_file)
+        return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_name})
 
-        return send_file(processed_image_stream, mimetype='image/jpeg', as_attachment=False, download_name='processed_image.jpg')
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+
+@app.route("/draw-box", methods=["POST"])
+def draw_box_route():
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No image provided'}), 400
+
+    image_file = request.files['image']
+    try:
+        img_bytes = draw_box(image_file)
+        return send_file(img_bytes, mimetype='image/jpeg', as_attachment=False, download_name='annotated_image.jpg')
 
     except ValueError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
@@ -64,7 +76,7 @@ def getreminders():
         response = get_reminders(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to retrieve reminders. Please try again'})
+        return jsonify({'status': 'error', 'message': 'Failed to retrieve reminders. Please try again', 'error': str(e)})
 
 
 @app.route("/postreminders", methods=["POST"])
@@ -73,7 +85,7 @@ def postreminders():
         response = post_reminders(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to post reminders. Please try again'})
+        return jsonify({'status': 'error', 'message': 'Failed to post reminders. Please try again', 'error': str(e)})
 
 
 @app.route("/deletereminders", methods=["POST"])
@@ -82,7 +94,7 @@ def deletereminders():
         response = delete_reminders(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again'})
+        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
 
 
 @app.route("/updatereminders", methods=["POST"])
@@ -91,7 +103,7 @@ def updatereminders():
         response = update_reminders(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again'})
+        return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
 
 
 @app.route('/protected', methods=['POST'])
