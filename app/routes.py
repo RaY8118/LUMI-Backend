@@ -1,9 +1,10 @@
 from app import app
 from flask import request, jsonify, send_file
-from app.auth import register_user, login_user
+from app.auth import register_user, login_user, get_user_data
 from app.img_recog import send_name, draw_box
 from app.location import save_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
+from app.relations import add_caregiver
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -106,17 +107,27 @@ def updatereminders():
         return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
 
 
-@app.route('/protected', methods=['POST'])
+@app.route("/add-caregiver", methods=["POST"])
+def addcaregivers():
+    try:
+        response = add_caregiver(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
+
+
+@app.route('/get-userdata', methods=['POST'])
 @jwt_required()
 def protected():
     current_user = get_jwt_identity()
     user_id = current_user.get('userId')
-    user_role = current_user.get('role')
-    name_role = current_user.get('name')
-    email_role = current_user.get('email')
-    mobile_role = current_user.get('mobile')
 
-    if user_id and user_role:
-        return jsonify({"status": "success", "userId": user_id, "role": user_role, "name": name_role, "email": email_role, "mobile": mobile_role}), 200
+    if user_id:
+        user_data = get_user_data(user_id)
+
+        if user_data:
+            return jsonify({"status": "success", "userData": user_data}), 200
+        else:
+            return jsonify({"status": "error", "message": "User not found"}), 404
     else:
         return jsonify({"status": "error", "message": "Invalid token data"}), 401

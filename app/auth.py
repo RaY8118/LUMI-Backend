@@ -54,16 +54,35 @@ def login_user(request):
     if not bcrypt.check_password_hash(user['password'], password):
         return jsonify({"status": "error", "message": "Invalid email or password"}), 401
 
-    access_token = create_access_token(identity={"userId": user["userId"],
-                                                 "name": user["name"],
-                                                 "email": user["email"],
-                                                 "mobile": user["mobile"],
-                                                 "role": user["role"]})
-    user_data = {
-        "userId": user["userId"],
-        "name": user["name"],
-        "email": user["email"],
-        "mobile": user["mobile"],
-        "role": user["role"],
-    }
-    return jsonify({"status": "success", "message": "Login Successful", "user": user_data, "token": access_token})
+    access_token = create_access_token(identity={"userId": user["userId"]})
+    return jsonify({"status": "success", "message": "Login Successful", "token": access_token})
+
+
+def get_user_data(user_id):
+    userId = user_id
+
+    if not userId:
+        return None
+
+    user = user_collection.find_one({"userId": userId})
+
+    if not user:
+        return None
+
+    if user["role"] == "CG":
+        user_data = {
+            "name": user["name"],
+            "email": user["email"],
+            "mobile": user["mobile"],
+            "role": user["role"]
+        }
+    else:
+        user_data = {
+            "name": user["name"],
+            "email": user["email"],
+            "mobile": user["mobile"],
+            "role": user["role"],
+            "caregivers": user.get("caregivers", [])
+        }
+
+    return user_data
