@@ -2,9 +2,9 @@ from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data
 from app.img_recog import send_name, draw_box
-from app.location import save_location
+from app.location import find_location, save_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
-from app.relations import add_caregiver
+from app.relations import add_caregiver, delete_caregiver
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -68,7 +68,12 @@ def draw_box_route():
 
 @app.route("/homelocation", methods=["POST"])
 def homelocation():
-    return save_location(request)
+    return save_home_location(request)
+
+
+@app.route("/findlocation", methods=["POST"])
+def findlocation():
+    return find_location(request)
 
 
 @app.route("/getreminders", methods=["POST"])
@@ -111,6 +116,15 @@ def updatereminders():
 def addcaregivers():
     try:
         response = add_caregiver(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
+
+
+@app.route("/delete-caregiver", methods=["POST"])
+def deletecaregivers():
+    try:
+        response = delete_caregiver(request)
         return response
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
