@@ -1,6 +1,7 @@
 from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data
+from app.img_encod import get_images, find_encodings, save_encodings
 from app.img_recog import send_name, draw_box
 from app.location import find_location, save_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
@@ -27,6 +28,21 @@ def login():
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
 
+@app.route("/encode-images", methods=["POST"])
+def encode_images():
+    imgList, personIds = get_images()
+    
+    if not imgList:
+        return jsonify({"status":"error", "message":"No valid images found to encode"}), 400
+    
+    encodeListKnown = find_encodings(imgList)
+    save_encodings(encodeListKnown, personIds)
+    
+    return jsonify({
+        "status":"success",
+        "message":"Images encoded and file saved successfully",
+        "encodedPersons":personIds
+    }),201
 
 def resize_image(image_file):
     image = Image.open(image_file)

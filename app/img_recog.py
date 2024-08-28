@@ -4,9 +4,12 @@ import pickle
 import numpy as np
 import io
 
-with open("model/Testing/face_recog/EncodeFile.p", 'rb') as file:
-    encodeListKnown, studentIds = pickle.load(file)
-print("File Loaded")
+try:
+    with open("resources/EncodeFile.p", 'rb') as file:
+        encodeListKnown, studentIds = pickle.load(file)
+    print("File Loaded")
+except FileNotFoundError:
+    print("EncodeFile.p not found, starting with an empty list.")
 
 
 def recognize_face(encoding_to_check):
