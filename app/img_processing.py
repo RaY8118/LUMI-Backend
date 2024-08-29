@@ -1,15 +1,68 @@
 import cv2
 import face_recognition
 import pickle
+import os
 import numpy as np
 import io
+from flask import current_app as app
 
-try:
-    with open("resources/EncodeFile.p", 'rb') as file:
-        encodeListKnown, studentIds = pickle.load(file)
-    print("File Loaded")
-except FileNotFoundError:
-    print("EncodeFile.p not found, starting with an empty list.")
+
+def initialize():
+    with app.app_context():
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+        else:
+            pass
+
+        try:
+            with open("resources/EncodeFile.p", 'rb') as file:
+                global encodeListKnown, studentIds
+                encodeListKnown, studentIds = pickle.load(file)
+        except FileNotFoundError:
+            print("EncodeFile.p not found, starting with an empty list.")
+    
+    
+def get_images():
+    pathlist = os.listdir(app.config['UPLOAD_FOLDER'])
+    imgList = []
+    personIds = []
+
+    for path in pathlist:
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], path)
+        img = cv2.imread(img_path)
+
+        if img is None:
+            print(f"Error loading image: {img_path}")
+            continue
+
+        imgList.append(img)
+        personIds.append(os.path.splitext(path)[0])
+
+    if not imgList:
+        print("No valid images loaded.")
+    else:
+        print(f"Loaded {len(imgList)} images successfully.")
+
+    return imgList, personIds
+
+
+def find_encodings(imageslist):
+    encodeList = []
+    for img in imageslist:
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        encodings = face_recognition.face_encodings(img_rgb)
+        if encodings:
+            encodeList.append(encodings[0])
+        else:
+            print("No faces found in the image.")
+    return encodeList
+
+
+def save_encodings(encodeListKnown, personIds):
+    encodeListKnownWithIds = [encodeListKnown, personIds]
+    with open("resources/EncodeFile.p", "wb") as file:
+        pickle.dump(encodeListKnownWithIds, file)
+    print("File saved")
 
 
 def recognize_face(encoding_to_check):

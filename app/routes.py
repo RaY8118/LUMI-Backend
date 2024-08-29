@@ -1,8 +1,7 @@
 from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data
-from app.img_encod import get_images, find_encodings, save_encodings
-from app.img_recog import send_name, draw_box
+from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box
 from app.location import find_location, save_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from app.relations import add_caregiver, delete_caregiver
