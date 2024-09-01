@@ -35,9 +35,6 @@ def save_home_location(request):
     return jsonify({"status": "success", "message": "Home location saved successfully"}), 201
 
 
-location_collection = mongo.db.location
-
-
 def find_location(request):
     data = request.json
     user_id = data.get('userId')

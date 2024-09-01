@@ -12,6 +12,18 @@ def generate_custom_id():
     return f"{prefix}{unique_id.upper()}"
 
 
+def validate_password(password):
+    if len(password) < 8:
+        return "Password must be at least 8 characters long."
+    if not any(char.isdigit() for char in password):
+        return "Password must contain at least one digit."
+    if not any(char.isupper() for char in password):
+        return "Password must contain at least one uppercase letter."
+    if not any(char.islower() for char in password):
+        return "Password must contain at least one lowercase letter."
+    return None
+
+
 def register_user(request):
     data = request.json
     name = data.get('name')
@@ -19,6 +31,10 @@ def register_user(request):
     mobile = data.get('mobile')
     password = data.get('password')
     role = data.get('value')
+
+    validation_error = validate_password(password)
+    if validation_error:
+        return jsonify({"status": "error", "message": validation_error}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     existing_user = user_collection.find_one({"email": email})
