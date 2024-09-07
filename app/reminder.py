@@ -1,23 +1,31 @@
 from flask import jsonify
 from app import mongo
-from bson import ObjectId
 import uuid
 
 reminders_collection = mongo.db.reminders
 
 
 def generate_reminder_id():
-    unique_id = uuid.uuid4().hex[:8] 
+    unique_id = uuid.uuid4().hex[:8]
     return f"{unique_id.upper()}"
 
 
 def post_reminders(request):
     data = request.json
+
+    required_fields = ['title', 'description', 'date',
+                       'status', 'isUrgent', 'isImportant', 'userId']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"status": "error", "message": f"Missing field: {field}"}), 400
+
     title = data.get('title')
     description = data.get('description')
     date = data.get('date')
     status = data.get('status')
     userId = data.get('userId')
+    urgent = data.get('isUrgent')
+    important = data.get('isImportant')
 
     remid = generate_reminder_id()
 
@@ -26,6 +34,8 @@ def post_reminders(request):
         "description": description,
         "date": date,
         "status": status,
+        "urgent": urgent,
+        "important": important,
         "userId": userId,
         "remId": remid
     }
@@ -54,6 +64,8 @@ def get_reminders(request):
             "description": r["description"],
             "date": r["date"],
             "status": r["status"],
+            "urgent": r['urgent'],
+            "important": r["important"],
             "remId": r["remId"]
         } for r in user_reminders]
 
@@ -86,6 +98,8 @@ def update_reminders(request):
         "description": data.get('description'),
         "date": data.get('date'),
         "status": data.get('status'),
+        "urgent": data.get('isUrgent'),
+        "important": data.get('isImportant'),
         "userId": data.get('userId')
     }
 
