@@ -33,14 +33,25 @@ def add_caregiver(request):
         "mobile": caregiver.get('mobile')
     }
 
-    result = user_collection.update_one(
+    result_patient = user_collection.update_one(
         {"userId": patient_id},
-        {"$push": {"caregivers": caregiver_data}})
+        {"$push": {'caregivers': caregiver_data}})
+    
+    patient_data = {
+        "PATId": patient_id,
+        "name": patient.get("name"),
+        "mobile": patient.get("mobile")
+    }
+    
+    result_caregiver = user_collection.update_one(
+        {"userId": care_giver_id},
+        {"$push" : {'patients': patient_data}}
+    )
 
-    if result.modified_count > 0:
-        return jsonify({'message': 'Caregiver added successfully'}), 200
+    if result_patient.modified_count > 0 and result_caregiver.modified_count > 0:
+        return jsonify({'message': 'Caregiver and Patient Linked successfully'}), 200
     else:
-        return jsonify({'error': 'Failed to add caregiver'}), 500
+        return jsonify({'error': 'Failed to add caregiver or patient'}), 500
 
 
 def delete_caregiver(request):
@@ -48,20 +59,29 @@ def delete_caregiver(request):
     care_giver_id = data.get('CGId')
     patient_id = data.get('PATId')
 
-    if not care_giver_id and not patient_id:
+    if not care_giver_id or not patient_id:
         return jsonify({'error': 'Patient ID and Caregiver ID are required '}), 404
 
     patient = user_collection.find_one({"userId": patient_id})
     if not patient:
         return jsonify({'error': 'Patient not found'}), 404
 
-    result = user_collection.update_one(
+    result_patient = user_collection.update_one(
         {'userId': patient_id},
         {'$pull': {'caregivers': {'CGId': care_giver_id}}}
     )
+    
+    caregiver = user_collection.find_one({"userId":care_giver_id})
+    if not caregiver:
+        return jsonify({'error':'Caregiver not found'}),404
+    
+    result_caregiver = user_collection.update_one(
+        {'userId': care_giver_id},
+        {'$pull': {'patients': {'PATId': patient_id}}}
+    )
 
-    if result.modified_count > 0:
-        return jsonify({'status': 'success', 'message': 'Caregiver successfully removed'})
+    if result_patient.modified_count > 0 and result_caregiver.modified_count > 0:
+        return jsonify({'status': 'success', 'message': 'Caregiver and Patient successfully removed'})
     else:
-        return jsonify({'error': 'Caregiver not found or no changes made'})
+        return jsonify({'error': 'Caregiver or Patient not found or no changes made'})
 
