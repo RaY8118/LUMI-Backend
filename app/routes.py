@@ -3,7 +3,7 @@ from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box
 from app.location import find_location, save_home_location
-from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
+from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders, post_reminders_for_patients, get_reminders_for_patient, delete_reminders_for_patient, update_reminders_for_patient
 from app.relations import add_caregiver, delete_caregiver
 from PIL import Image
 import io
@@ -27,21 +27,23 @@ def login():
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
 
+
 @app.route("/encode-images", methods=["POST"])
 def encode_images():
     imgList, personIds = get_images()
-    
+
     if not imgList:
-        return jsonify({"status":"error", "message":"No valid images found to encode"}), 400
-    
+        return jsonify({"status": "error", "message": "No valid images found to encode"}), 400
+
     encodeListKnown = find_encodings(imgList)
     save_encodings(encodeListKnown, personIds)
-    
+
     return jsonify({
-        "status":"success",
-        "message":"Images encoded and file saved successfully",
-        "encodedPersons":personIds
-    }),201
+        "status": "success",
+        "message": "Images encoded and file saved successfully",
+        "encodedPersons": personIds
+    }), 201
+
 
 def resize_image(image_file):
     image = Image.open(image_file)
@@ -160,3 +162,39 @@ def protected():
             return jsonify({"status": "error", "message": "User not found"}), 404
     else:
         return jsonify({"status": "error", "message": "Invalid token data"}), 401
+
+
+@app.route('/caregiver/reminders', methods=['POST'])
+def caregiver_add_reminder():
+    try:
+        response = post_reminders_for_patients(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to add reminders. Please try again', 'error': str(e)})
+
+
+@app.route('/caregiver/reminders', methods=['GET'])
+def caregiver_get_reminder():
+    try:
+        response = get_reminders_for_patient(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to get reminders. Please try again', 'error': str(e)})
+
+
+@app.route('/caregiver/reminders', methods=['DELETE'])
+def caregiver_delete_reminder():
+    try:
+        response = delete_reminders_for_patient(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
+
+
+@app.route('/caregiver/reminders', methods=['PUT'])
+def caregiver_update_reminder():
+    try:
+        response = update_reminders_for_patient(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
