@@ -2,3 +2,4 @@ model/Testing
 .env
 object_detection.py
 decoded_image.jpg
+yolo*.pt
