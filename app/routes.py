@@ -1,7 +1,7 @@
 from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data
-from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box
+from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
 from app.location import find_location, save_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from app.relations import add_caregiver, delete_caregiver
@@ -27,21 +27,23 @@ def login():
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
 
+
 @app.route("/encode-images", methods=["POST"])
 def encode_images():
     imgList, personIds = get_images()
-    
+
     if not imgList:
-        return jsonify({"status":"error", "message":"No valid images found to encode"}), 400
-    
+        return jsonify({"status": "error", "message": "No valid images found to encode"}), 400
+
     encodeListKnown = find_encodings(imgList)
     save_encodings(encodeListKnown, personIds)
-    
+
     return jsonify({
-        "status":"success",
-        "message":"Images encoded and file saved successfully",
-        "encodedPersons":personIds
-    }),201
+        "status": "success",
+        "message": "Images encoded and file saved successfully",
+        "encodedPersons": personIds
+    }), 201
+
 
 def resize_image(image_file):
     image = Image.open(image_file)
@@ -78,6 +80,27 @@ def draw_box_route():
         return send_file(img_bytes, mimetype='image/jpeg', as_attachment=False, download_name='annotated_image.jpg')
 
     except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+
+@app.route("/obj-detection", methods=["POST"])
+def obj_detection():
+    # Check if the image is in the request
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No image provided'}), 400
+
+    # Get the uploaded image file
+    image_file = request.files['image']
+
+    try:
+        # Perform object detection on the image
+        identified_objects = object_detection(image_file)
+
+        # Return a success response with identified objects
+        return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_objects})
+
+    except ValueError as e:
+        # Return error response if something goes wrong
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 

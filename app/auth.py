@@ -90,7 +90,9 @@ def get_user_data(user_id):
             "name": user["name"],
             "email": user["email"],
             "mobile": user["mobile"],
-            "role": user["role"]
+            "role": user["role"],
+            "patients": user.get("patients", [])
+
         }
     else:
         user_data = {

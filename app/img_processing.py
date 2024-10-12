@@ -5,7 +5,14 @@ import os
 import numpy as np
 import io
 from flask import current_app as app
+import logging
 
+from ultralytics import YOLO
+# Suppress unnecessary logging from YOLO
+logging.getLogger('ultralytics').setLevel(logging.CRITICAL)
+
+# Load the YOLO model
+model = YOLO("../model/yolov8n.pt")
 
 def initialize():
     with app.app_context():
@@ -112,3 +119,23 @@ def draw_box(image_file):
     _, img_encoded = cv2.imencode('.jpg', new_image)
     img_bytes = io.BytesIO(img_encoded.tobytes())
     return img_bytes
+
+
+def object_detection(image_file):
+    # Convert the image file (bytes) to a NumPy array
+    image_bytes = np.frombuffer(image_file.read(), np.uint8)
+    
+    # Decode image from bytes using OpenCV
+    image = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
+    
+    # Check if image was properly decoded
+    if image is None:
+        raise ValueError("Error decoding the image. Unsupported or invalid image format.")
+
+    # Predict objects in the image using YOLO
+    results = model.predict(image)
+
+    # Extract detected objects' names
+    detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
+    
+    return detected_objects
