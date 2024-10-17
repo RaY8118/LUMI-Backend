@@ -14,6 +14,7 @@ logging.getLogger('ultralytics').setLevel(logging.CRITICAL)
 # Load the YOLO model
 model = YOLO("../model/yolov8n.pt")
 
+
 def initialize():
     with app.app_context():
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -27,8 +28,8 @@ def initialize():
                 encodeListKnown, studentIds = pickle.load(file)
         except FileNotFoundError:
             print("EncodeFile.p not found, starting with an empty list.")
-    
-    
+
+
 def get_images():
     pathlist = os.listdir(app.config['UPLOAD_FOLDER'])
     imgList = []
@@ -124,18 +125,19 @@ def draw_box(image_file):
 def object_detection(image_file):
     # Convert the image file (bytes) to a NumPy array
     image_bytes = np.frombuffer(image_file.read(), np.uint8)
-    
+
     # Decode image from bytes using OpenCV
     image = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
-    
+
     # Check if image was properly decoded
     if image is None:
-        raise ValueError("Error decoding the image. Unsupported or invalid image format.")
+        raise ValueError(
+            "Error decoding the image. Unsupported or invalid image format.")
 
     # Predict objects in the image using YOLO
     results = model.predict(image)
 
     # Extract detected objects' names
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
-    
+    detected_objects = set(detected_objects)
     return detected_objects
