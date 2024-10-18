@@ -139,5 +139,5 @@ def object_detection(image_file):
 
     # Extract detected objects' names
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
-    detected_objects = set(detected_objects)
+    # detected_objects = set(detected_objects)
     return detected_objects

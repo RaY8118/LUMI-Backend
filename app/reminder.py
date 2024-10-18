@@ -17,8 +17,8 @@ def post_reminders(request):
     except Exception as e:
         return jsonify({"status": "error", "message": "Invalid JSON data"}), 400
 
-    required_fields = ['title', 'description', 'date',
-                       'status', 'isUrgent', 'isImportant', 'userId']
+    required_fields = ['title', 'description', 'date', 'time',
+                       'status', 'userId']
     for field in required_fields:
         if field not in data:
             return jsonify({"status": "error", "message": f"Missing field: {field}"}), 400
@@ -26,6 +26,7 @@ def post_reminders(request):
     title = data.get('title')
     description = data.get('description')
     date = data.get('date')
+    time = data.get('time')
     status = data.get('status')
     userId = data.get('userId')
     urgent = data.get('isUrgent')
@@ -37,6 +38,7 @@ def post_reminders(request):
         "title": title,
         "description": description,
         "date": date,
+        "time": time,
         "status": status,
         "urgent": urgent,
         "important": important,
@@ -67,6 +69,7 @@ def get_reminders(request):
             "title": r["title"],
             "description": r["description"],
             "date": r["date"],
+            "time": r["time"],
             "status": r["status"],
             "urgent": r['urgent'],
             "important": r["important"],
@@ -101,6 +104,7 @@ def update_reminders(request):
         "title": data.get('title'),
         "description": data.get('description'),
         "date": data.get('date'),
+        "time": data.get('time'),
         "status": data.get('status'),
         "urgent": data.get('isUrgent'),
         "important": data.get('isImportant'),
