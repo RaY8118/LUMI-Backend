@@ -10,6 +10,7 @@ import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
+# Route for user registration
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -19,6 +20,7 @@ def register():
         return jsonify({'status': 'error', 'message': 'Registration failed, please try again'})
 
 
+# Route for user login
 @app.route("/login", methods=["POST"])
 def login():
     try:
@@ -28,6 +30,7 @@ def login():
         return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
 
 
+# Route for encoding images
 @app.route("/encode-images", methods=["POST"])
 def encode_images():
     imgList, personIds = get_images()
@@ -35,8 +38,8 @@ def encode_images():
     if not imgList:
         return jsonify({"status": "error", "message": "No valid images found to encode"}), 400
 
-    encodeListKnown = find_encodings(imgList)
-    save_encodings(encodeListKnown, personIds)
+    encodeListKnown = find_encodings(imgList)  # Find encodings for the images
+    save_encodings(encodeListKnown, personIds)  # Save the encodings
 
     return jsonify({
         "status": "success",
@@ -46,15 +49,18 @@ def encode_images():
 
 
 def resize_image(image_file):
-    image = Image.open(image_file)
-    resized_image = image.resize((600, 720))
-    image_stream = io.BytesIO()
+    """Resize an image to a specified size."""
+    image = Image.open(image_file)  # Open the image file
+    resized_image = image.resize((600, 720))  # Resize the image
+    image_stream = io.BytesIO()  # Create a byte stream
+    # Save the resized image to the stream
     resized_image.save(image_stream, format='JPEG')
-    image_stream.seek(0)
+    image_stream.seek(0)  # Rewind the stream
 
-    return image_stream
+    return image_stream  # Return the byte stream
 
 
+# Route for identifying a name from an image
 @app.route("/send-name", methods=["POST"])
 def identify_name():
     if 'image' not in request.files:
@@ -62,6 +68,7 @@ def identify_name():
 
     image_file = request.files['image']
     try:
+        # Identify the name from the image
         identified_name = send_name(image_file)
         return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_name})
 
@@ -69,34 +76,34 @@ def identify_name():
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
+# Route for drawing a box around faces in an image
 @app.route("/draw-box", methods=["POST"])
 def draw_box_route():
     if 'image' not in request.files:
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
 
-    image_file = request.files['image']
+    image_file = request.files['image']  # Get the image file
     try:
-        img_bytes = draw_box(image_file)
+        img_bytes = draw_box(image_file)  # Draw boxes around detected faces
         return send_file(img_bytes, mimetype='image/jpeg', as_attachment=False, download_name='annotated_image.jpg')
 
     except ValueError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
+# Route for object detection in images
 @app.route("/obj-detection", methods=["POST"])
 def obj_detection():
-    # Check if the image is in the request
     if 'image' not in request.files:
+        # Check if the image is in the request
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
 
-    # Get the uploaded image file
     image_file = request.files['image']
 
     try:
-        # Perform object detection on the image
-        identified_objects = object_detection(image_file)
-
-        # Return a success response with identified objects
+        identified_objects = object_detection(
+            image_file)  # Perform object detection
+        # Return identified objects
         return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_objects})
 
     except ValueError as e:
@@ -104,16 +111,19 @@ def obj_detection():
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
+# Route for saving home location
 @app.route("/homelocation", methods=["POST"])
 def homelocation():
     return save_home_location(request)
 
 
+# Route for finding location
 @app.route("/findlocation", methods=["POST"])
 def findlocation():
     return find_location(request)
 
 
+# Route for getting reminders
 @app.route("/getreminders", methods=["POST"])
 def getreminders():
     try:
@@ -123,6 +133,7 @@ def getreminders():
         return jsonify({'status': 'error', 'message': 'Failed to retrieve reminders. Please try again', 'error': str(e)})
 
 
+# Route for posting reminders
 @app.route("/postreminders", methods=["POST"])
 def postreminders():
     try:
@@ -132,6 +143,7 @@ def postreminders():
         return jsonify({'status': 'error', 'message': 'Failed to post reminders. Please try again', 'error': str(e)})
 
 
+# Route for deleting reminders
 @app.route("/deletereminders", methods=["POST"])
 def deletereminders():
     try:
@@ -141,6 +153,7 @@ def deletereminders():
         return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
 
 
+# Route for updating reminders
 @app.route("/updatereminders", methods=["POST"])
 def updatereminders():
     try:
@@ -150,6 +163,7 @@ def updatereminders():
         return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
 
 
+# Route for adding a caregiver
 @app.route("/add-caregiver", methods=["POST"])
 def addcaregivers():
     try:
@@ -159,6 +173,7 @@ def addcaregivers():
         return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
 
 
+# Route for deleting a caregiver
 @app.route("/delete-caregiver", methods=["POST"])
 def deletecaregivers():
     try:
@@ -168,10 +183,11 @@ def deletecaregivers():
         return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
 
 
+# Route for getting user data with JWT protection
 @app.route('/get-userdata', methods=['POST'])
-@jwt_required()
+@jwt_required()  # Protect this route with JWT
 def protected():
-    current_user = get_jwt_identity()
+    current_user = get_jwt_identity()  # Get the current user's identity
     user_id = current_user.get('userId')
 
     if user_id:
