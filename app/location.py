@@ -73,3 +73,23 @@ def find_location(request):
         return jsonify({"status": "success", "message": "You are within the safe zone"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500
+
+
+def get_home_location(request):
+    try:
+        # Get user ID from route parameters
+        user_id = request.view_args['user_id']
+
+        # Retrieve the user's home location from the database
+        home_location = location_collection.find_one(
+            {"userId": user_id, "type": "home_location"}
+        )
+
+        if not home_location:
+            return jsonify({"status": "error", "message": "Home location not found"}), 404
+
+        # Return only the coordinates in the response
+        return jsonify({"status": "success", "coords": {"latitude": home_location['latitude'], "longitude": home_location['longitude']}}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500

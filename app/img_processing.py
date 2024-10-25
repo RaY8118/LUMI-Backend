@@ -106,26 +106,36 @@ def recognize_face(encoding_to_check):
 def process_image(image_file):
     """Process an uploaded image to detect faces and return their locations and encodings."""
     image_data = np.frombuffer(image_file.read(), np.uint8)  # Read image bytes
-    # Decode image from bytes
     new_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
 
     if new_image is None:
         raise ValueError("Error: Image could not be loaded.")
 
+    print(f"New Image Shape: {new_image.shape}")  # Debugging line
+    print(f"Image Data Type: {new_image.dtype}")  # Debugging line
+
     # Convert image to RGB for face recognition
     rgb_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
-    face_locations = face_recognition.face_locations(
-        rgb_image)  # Find face locations
-    face_encodings = face_recognition.face_encodings(
-        rgb_image, face_locations)  # Get face encodings
+    
+    # Check the RGB image shape
+    print(f"RGB Image Shape: {rgb_image.shape}")  # Debugging line
 
-    # Return locations, encodings, and the image
+    face_locations = face_recognition.face_locations(rgb_image)  # Find face locations
+    face_encodings = face_recognition.face_encodings(rgb_image, face_locations)  # Get face encodings
+
+    print(f"Detected {len(face_locations)} faces.")  # Debugging line
+    print(f"Face locations: {face_locations}")  # Debugging line
+    print(f"Face encodings: {face_encodings}")  # Debugging line
+
     return face_locations, face_encodings, new_image
-
 
 def send_name(image_file):
     """Identify faces in an image and return the name of the first detected face."""
     face_locations, face_encodings, new_image = process_image(image_file)
+    
+    if not face_encodings:  # Check if no faces were found
+        return "Unknown"
+
     for face_encoding in face_encodings:
         identified_name = recognize_face(face_encoding)  # Recognize the face
         return identified_name  # Return the identified name
