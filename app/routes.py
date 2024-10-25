@@ -4,7 +4,7 @@ from app.auth import register_user, login_user, get_user_data
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
 from app.location import find_location, save_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
-from app.relations import add_caregiver, delete_caregiver
+from app.relations import add_caregiver, delete_caregiver, add_patient, delete_patient
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -38,8 +38,19 @@ def encode_images():
     if not imgList:
         return jsonify({"status": "error", "message": "No valid images found to encode"}), 400
 
-    encodeListKnown = find_encodings(imgList)  # Find encodings for the images
-    save_encodings(encodeListKnown, personIds)  # Save the encodings
+    try:
+        print("Finding encodings...")
+        encodeListKnown = find_encodings(imgList)
+        print("Encodings found:", len(encodeListKnown))
+
+        if not encodeListKnown:
+            return jsonify({"status": "error", "message": "No valid face encodings found."}), 400
+
+        print("Saving encodings...")
+        save_encodings(encodeListKnown, personIds)
+    except Exception as e:
+        print(f"Error during encoding or saving: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
     return jsonify({
         "status": "success",
@@ -170,7 +181,18 @@ def addcaregivers():
         response = add_caregiver(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
+        return jsonify({'status': 'error', 'message': 'Failed to add caregiver. Please try again', 'error': str(e)})
+
+# Route for adding a patient
+
+
+@app.route("/add-patient", methods=["POST"])
+def addpatients():
+    try:
+        response = add_patient(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to add patient. Please try again', 'error': str(e)})
 
 
 # Route for deleting a caregiver
@@ -180,7 +202,18 @@ def deletecaregivers():
         response = delete_caregiver(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
+        return jsonify({'status': 'error', 'message': 'Failed to delete caregiver. Please try again', 'error': str(e)})
+
+# Route for deleting a patient
+
+
+@app.route("/delete-patient", methods=["POST"])
+def deletepatients():
+    try:
+        response = delete_patient(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to delete patients. Please try again', 'error': str(e)})
 
 
 # Route for getting user data with JWT protection

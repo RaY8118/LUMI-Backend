@@ -75,3 +75,104 @@ def delete_caregiver(request):
         return jsonify({'status': 'success', 'message': 'Caregiver successfully removed'})
     else:
         return jsonify({'error': 'Caregiver not found or no changes made'})
+
+
+def add_patient(request):
+    data = request.json
+    patient_id = data.get('PATId')  # Get patient ID from request
+    caregiver_id = data.get('CGId')  # Get caregiver ID from request
+
+    # Check if both IDs are provided
+    if not patient_id or not caregiver_id:
+        return jsonify({'error': 'Patient ID and Caregiver information are required'}), 404
+
+    # Check if the patient exists
+    patient = user_collection.find_one({"userId": patient_id})
+    if not patient:
+        return jsonify({'error': 'Patient not found'}), 404
+
+    # Check if the caregiver exists
+    caregiver = user_collection.find_one(
+        {"userId": caregiver_id, "role": "CG"})
+
+    if not caregiver:
+        return jsonify({'error': 'Caregiver not found'}), 404
+
+    # Check if patient is already assigned to the caregiver
+    existing_patient = next((p for p in caregiver.get(
+        'patients', []) if p['PATId'] == patient_id), None)
+
+    if existing_patient:
+        return jsonify({'error': 'Patient already assigned to this caregiver'}), 400
+
+    # Prepare patient data to be added
+    patient_data = {
+        "PATId": patient_id,
+        "name": patient.get('name'),
+        "mobile": patient.get('mobile')
+    }
+
+    # Update the caregiver document by adding the patient
+    result = user_collection.update_one(
+        {"userId": caregiver_id},
+        {"$push": {"patients": patient_data}})
+
+    # Check if the update was successful
+    if result.modified_count > 0:
+        # Now, add the caregiver's name to the patient's document
+        caregiver_name = caregiver.get('name')
+
+        # Update the patient's document with the caregiver's name
+        update_result = user_collection.update_one(
+            {"userId": patient_id},
+            {"$set": {"caregiverName": caregiver_name}}
+        )
+
+        if update_result.modified_count > 0:
+            return jsonify({'message': 'Patient added successfully and caregiver name updated'}), 200
+        else:
+            return jsonify({'error': 'Failed to update caregiver name in patient document'}), 500
+
+    else:
+        return jsonify({'error': 'Failed to add patient'}), 500
+
+
+def delete_patient(request):
+    data = request.json
+    patient_id = data.get('PATId')  # Get patient ID from request
+    caregiver_id = data.get('CGId')  # Get caregiver ID from request
+
+    # Check if both IDs are provided
+    if not patient_id or not caregiver_id:
+        return jsonify({'error': 'Patient ID and Caregiver ID are required'}), 404
+
+    # Check if the caregiver exists
+    caregiver = user_collection.find_one({"userId": caregiver_id})
+
+    if not caregiver:
+        return jsonify({'error': 'Caregiver not found'}), 404
+
+    # Log caregiver details for debugging
+    print(f"Caregiver found: {caregiver}")
+
+    # Remove the patient from the caregiver's list
+    result = user_collection.update_one(
+        {'userId': caregiver_id},
+        {'$pull': {'patients': {'PATId': patient_id}}}
+    )
+
+    # Check if any patients were removed
+    if result.modified_count > 0:
+        # Now, remove the caregiver's name from the patient's document
+        update_result = user_collection.update_one(
+            {"userId": patient_id},
+            {"$unset": {"caregiverName": ""}}  # Remove the caregiverName field
+        )
+
+        # Check if the update was successful
+        if update_result.modified_count > 0:
+            return jsonify({'status': 'success', 'message': 'Patient successfully removed and caregiver name updated'}), 200
+        else:
+            return jsonify({'error': 'Failed to remove caregiver name from patient document'}), 500
+    else:
+        return jsonify({'error': 'Patient not found or no changes made'}), 404

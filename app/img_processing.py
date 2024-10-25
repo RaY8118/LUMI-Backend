@@ -12,7 +12,7 @@ from ultralytics import YOLO
 logging.getLogger('ultralytics').setLevel(logging.CRITICAL)
 
 # Load the YOLO model
-model = YOLO("../model/yolov8n.pt")
+model = YOLO("../model/yolov10b.pt")
 
 
 def initialize():
@@ -61,16 +61,20 @@ def get_images():
 def find_encodings(imageslist):
     """Find and return face encodings for a list of images."""
     encodeList = []
-    for img in imageslist:
-        # Convert image to RGB format
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encodings = face_recognition.face_encodings(
-            img_rgb)  # Get face encodings
-        if encodings:
-            encodeList.append(encodings[0])
-        else:
-            print("No faces found in the image.")
-    return encodeList  # Return the list of encodings
+    for index, img in enumerate(imageslist):
+        try:
+            print(f"Processing image {index + 1}/{len(imageslist)}")
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            print(f"Converted image {index + 1} to RGB format.")
+            encodings = face_recognition.face_encodings(img_rgb)
+            if encodings:
+                encodeList.append(encodings[0])
+                print(f"Encoding found for image {index + 1}.")
+            else:
+                print(f"No faces found in image {index + 1}.")
+        except Exception as e:
+            print(f"Error processing image {index + 1}: {e}")
+    return encodeList
 
 
 def save_encodings(encodeListKnown, personIds):
@@ -163,5 +167,6 @@ def object_detection(image_file):
 
     # Extract detected objects' names
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
-    # detected_objects = set(detected_objects)
-    return detected_objects
+    unique_detected_objects = list(set(detected_objects))
+
+    return unique_detected_objects

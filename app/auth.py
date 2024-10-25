@@ -103,6 +103,7 @@ def get_user_data(user_id):
             "email": user["email"],
             "mobile": user["mobile"],
             "role": user["role"],
+            "userId": user["userId"],
             "patients": user.get("patients", [])  # Get patients list if exists
 
         }
@@ -112,6 +113,7 @@ def get_user_data(user_id):
             "email": user["email"],
             "mobile": user["mobile"],
             "role": user["role"],
+            "userId": user["userId"],
             # Get caregivers list if exists
             "caregivers": user.get("caregivers", [])
         }
