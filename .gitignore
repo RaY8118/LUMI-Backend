@@ -3,3 +3,4 @@ model/Testing
 object_detection.py
 decoded_image.jpg
 yolo*.pt
+__pycache__
