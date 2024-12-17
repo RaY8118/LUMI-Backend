@@ -1,6 +1,6 @@
 from app import app
 from flask import request, jsonify, send_file
-from app.auth import register_user, login_user, get_user_data
+from app.auth import register_user, login_user, get_user_data, reset_password
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
 from app.location import find_location, save_home_location, get_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
@@ -24,10 +24,20 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     try:
-        respone = login_user(request)
-        return respone
+        response = login_user(request)
+        return response
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Login failed, please try again'})
+
+
+# Route for reseting password
+@app.route("/reset-password", methods={"POST"})
+def password_reset():
+    try:
+        response = reset_password(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Password reset failed, please try again'})
 
 
 # Route for encoding images
@@ -139,9 +149,8 @@ def findlocation():
 def gethomelocation():
     return get_home_location(request)
 
+
 # Route for getting reminders
-
-
 @app.route("/getreminders", methods=["POST"])
 def getreminders():
     try:
@@ -190,9 +199,8 @@ def addcaregivers():
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Failed to add caregiver. Please try again', 'error': str(e)})
 
+
 # Route for adding a patient
-
-
 @app.route("/add-patient", methods=["POST"])
 def addpatients():
     try:
@@ -211,9 +219,8 @@ def deletecaregivers():
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Failed to delete caregiver. Please try again', 'error': str(e)})
 
+
 # Route for deleting a patient
-
-
 @app.route("/delete-patient", methods=["POST"])
 def deletepatients():
     try:
