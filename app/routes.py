@@ -4,7 +4,7 @@ from app.auth import register_user, login_user, get_user_data, reset_password
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
 from app.location import find_location, save_home_location, get_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
-from app.relations import add_caregiver, delete_caregiver, add_patient, delete_patient
+from app.relations import add_caregiver_patient, delete_caregiver_patient
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -151,7 +151,7 @@ def gethomelocation():
 
 
 # Route for getting reminders
-@app.route("/getreminders", methods=["POST"])
+@app.route("/reminders", methods=["GET"])
 def getreminders():
     try:
         response = get_reminders(request)
@@ -161,7 +161,7 @@ def getreminders():
 
 
 # Route for posting reminders
-@app.route("/postreminders", methods=["POST"])
+@app.route("/reminders", methods=["POST"])
 def postreminders():
     try:
         response = post_reminders(request)
@@ -171,17 +171,17 @@ def postreminders():
 
 
 # Route for deleting reminders
-@app.route("/deletereminders", methods=["POST"])
-def deletereminders():
+@app.route("/reminders/<reminderId>", methods=["DELETE"])
+def deletereminders(reminderId):
     try:
-        response = delete_reminders(request)
+        response = delete_reminders(reminderId)
         return response
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Failed to delete reminders. Please try again', 'error': str(e)})
 
 
 # Route for updating reminders
-@app.route("/updatereminders", methods=["POST"])
+@app.route("/reminders", methods=["PUT"])
 def updatereminders():
     try:
         response = update_reminders(request)
@@ -190,44 +190,26 @@ def updatereminders():
         return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
 
 
-# Route for adding a caregiver
-@app.route("/add-caregiver", methods=["POST"])
-def addcaregivers():
+# Route for adding a caregiver and patient relationship
+@app.route("/add-caregiver-patient", methods=["POST"])
+def add_caregiver_patient_route():
     try:
-        response = add_caregiver(request)
+        response = add_caregiver_patient(request)  # Call the combined function
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to add caregiver. Please try again', 'error': str(e)})
+        return jsonify({'status': 'error', 'message': 'Failed to add caregiver and patient. Please try again', 'error': str(e)})
+
+# Route for deleting a caregiver-patient relationship
 
 
-# Route for adding a patient
-@app.route("/add-patient", methods=["POST"])
-def addpatients():
+@app.route("/delete-caregiver-patient", methods=["DELETE"])
+def delete_caregiver_patient_route():
     try:
-        response = add_patient(request)
+        # Call the function to delete the relationship
+        response = delete_caregiver_patient(request)
         return response
     except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to add patient. Please try again', 'error': str(e)})
-
-
-# Route for deleting a caregiver
-@app.route("/delete-caregiver", methods=["POST"])
-def deletecaregivers():
-    try:
-        response = delete_caregiver(request)
-        return response
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete caregiver. Please try again', 'error': str(e)})
-
-
-# Route for deleting a patient
-@app.route("/delete-patient", methods=["POST"])
-def deletepatients():
-    try:
-        response = delete_patient(request)
-        return response
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete patients. Please try again', 'error': str(e)})
+        return jsonify({'status': 'error', 'message': 'Failed to delete caregiver and patient relationship. Please try again', 'error': str(e)})
 
 
 # Route for getting user data with JWT protection
