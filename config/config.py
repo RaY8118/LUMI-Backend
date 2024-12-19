@@ -1,6 +1,7 @@
 import os
 import pyrebase
 
+
 class Config:
     # General app settings
     SECRET_KEY = os.getenv('SECRET_KEY')
@@ -25,7 +26,7 @@ class Config:
             "apiKey": cls.FIREBASE_API_KEY,
             "authDomain": cls.FIREBASE_AUTH_DOMAIN,
             "projectId": cls.FIREBASE_PROJECT_ID,
-            "databaseURL" : cls.FIREBASE_DATABASE_URL,
+            "databaseURL": cls.FIREBASE_DATABASE_URL,
             "storageBucket": cls.FIREBASE_STORAGE_BUCKET,
             "messagingSenderId": cls.FIREBASE_MESSAGING_SENDER_ID,
             "appId": cls.FIREBASE_APP_ID,

@@ -2,7 +2,7 @@ from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data, reset_password
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
-from app.location import find_location, save_home_location, get_home_location
+from app.location import save_home_location, get_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from app.relations import add_caregiver_patient, delete_caregiver_patient
 from PIL import Image
@@ -133,19 +133,13 @@ def obj_detection():
 
 
 # Route for saving home location
-@app.route("/homelocation", methods=["POST"])
+@app.route("/safe-location", methods=["POST"])
 def homelocation():
     return save_home_location(request)
 
 
-# Route for finding location
-@app.route("/findlocation", methods=["POST"])
-def findlocation():
-    return find_location(request)
-
-
 # Route for getting home location
-@app.route("/gethomelocation", methods=["POST"])
+@app.route("/safe-location", methods=["GET"])
 def gethomelocation():
     return get_home_location(request)
 
