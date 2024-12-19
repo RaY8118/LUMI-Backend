@@ -60,8 +60,7 @@ def post_reminders(request):
 def get_reminders(request):
     """Retrieve reminders for a specific user."""
     try:
-        data = request.json  # Get JSON data from the request
-        userId = data.get('userId')  # Extract user ID
+        userId = request.args.get('userId')  # Extract user ID
 
         if not userId:
             return jsonify({"status": "error", "message": "User ID is required"}), 400
@@ -91,21 +90,18 @@ def get_reminders(request):
         return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500
 
 
-def delete_reminders(request):
+def delete_reminders(reminderId):
     """Delete a reminder based on the provided reminder ID."""
-    data = request.json  # Get JSON data from the request
-    RemID = data.get('remId')  # Extract reminder ID
-
-    if not RemID:
+    if not reminderId:
         return jsonify({"status": "error", "message": "Reminder ID is required"}), 400
 
     # Attempt to delete the reminder from the database
-    result = reminders_collection.delete_one({"remId": RemID})
+    result = reminders_collection.delete_one({"remId": reminderId})
 
     if result.deleted_count == 0:
         return jsonify({"status": "error", "message": "Reminder not found"}), 404
 
-    return jsonify({"status": "success", "message": "Reminder Deleted Successfully"}), 200
+    return jsonify({"status": "success", "message": "Reminder deleted successfully"}), 200
 
 
 def update_reminders(request):

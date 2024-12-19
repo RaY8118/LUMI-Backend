@@ -2,9 +2,11 @@ from flask import jsonify
 from app import mongo, bcrypt
 from flask_jwt_extended import create_access_token
 import uuid
+from config.config import Config
 
 # Access the MongoDB users collection
 user_collection = mongo.db.users
+authenticate = Config.init_firebase()
 
 
 def generate_custom_id():
@@ -40,29 +42,34 @@ def register_user(request):
     if validation_error:
         return jsonify({"status": "error", "message": validation_error}), 400
 
-    hashed_password = bcrypt.generate_password_hash(
-        password).decode('utf-8')  # Hash the password
     existing_user = user_collection.find_one(
         {"email": email})  # Check if user already exists
 
     if existing_user:
         return jsonify({"status": "error", "message": "User already exists"}), 400
 
-    custom_id = generate_custom_id()  # Generate a unique user ID
+    try:
+        firebase_user = authenticate.create_user_with_email_and_password(
+            email, password)
+        firebase_uid = firebase_user["localId"]
 
-    # Create a new user object
-    new_user = {
-        "name": name,
-        "email": email,
-        "mobile": mobile,
-        "password": hashed_password,
-        "role": role,
-        "userId": custom_id
-    }
-    # Insert the new user into the database
-    user_collection.insert_one(new_user)
+        custom_id = generate_custom_id()
 
-    return jsonify({"status": "success", "message": "User created successfully!!"}), 201
+        new_user = {
+            "name": name,
+            "email": email,
+            "mobile": mobile,
+            "password": bcrypt.generate_password_hash(password).decode('utf-8'),
+            "role": role,
+            "userId": custom_id,
+            "firebase_uid": firebase_uid
+        }
+        user_collection.insert_one(new_user)
+
+        return jsonify({"status": "success", "message": "User created successfully!!"}), 201
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 
 def login_user(request):
@@ -71,17 +78,28 @@ def login_user(request):
     email = data.get('email')
     password = data.get('password')
 
-    user = user_collection.find_one({"email": email})  # Find user by email
+    try:
+        firebase_user = authenticate.sign_in_with_email_and_password(
+            email, password)
+        firebase_uid = firebase_user["localId"]
 
-    if not user:
-        return jsonify({"status": "error", "message": "Invalid Credentials"}), 401
+        user = user_collection.find_one({"firebase_uid": firebase_uid})
+        if not user:
+            return jsonify({"status": "error", "message": "User not found in database"}), 404
 
-    if not bcrypt.check_password_hash(user['password'], password):
-        return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+        access_token = create_access_token(identity={"userId": user["userId"]})
+        return jsonify({"status": "success", "message": "Login Successful", "token": access_token})
 
-    access_token = create_access_token(
-        identity={"userId": user["userId"]})  # Generate access token
-    return jsonify({"status": "success", "message": "Login Successful", "token": access_token})
+    except Exception as e:
+        # Handle the error by checking for INVALID_LOGIN_CREDENTIALS specifically
+        error_message = str(e)
+
+        # Check if the error message contains "INVALID_LOGIN_CREDENTIALS"
+        if "INVALID_LOGIN_CREDENTIALS" in error_message:
+            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+
+        # For any other errors, return a generic error message
+        return jsonify({"status": "error", "message": "Authentication failed. Please try again."}), 401
 
 
 def get_user_data(user_id):
@@ -119,3 +137,17 @@ def get_user_data(user_id):
         }
 
     return user_data  # Return the structured user data
+
+
+def reset_password(request):
+    """Send a password reset email"""
+    email = request.json.get('email')
+
+    if not email:
+        return jsonify({"status": "error", "message": "Email is required"}), 400
+
+    try:
+        authenticate.send_password_reset_email(email)
+        return jsonify({"status": "success", "message": "Password reset email sent successfully"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
