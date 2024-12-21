@@ -4,7 +4,7 @@ from app.auth import register_user, login_user, get_user_data, reset_password
 from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
 from app.location import save_home_location, get_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
-from app.relations import add_caregiver_patient, delete_caregiver_patient
+from app.relations import create_family, add_user_to_family
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -184,28 +184,6 @@ def updatereminders():
         return jsonify({'status': 'error', 'message': 'Failed to update reminders. Please try again', 'error': str(e)})
 
 
-# Route for adding a caregiver and patient relationship
-@app.route("/add-caregiver-patient", methods=["POST"])
-def add_caregiver_patient_route():
-    try:
-        response = add_caregiver_patient(request)  # Call the combined function
-        return response
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to add caregiver and patient. Please try again', 'error': str(e)})
-
-# Route for deleting a caregiver-patient relationship
-
-
-@app.route("/delete-caregiver-patient", methods=["DELETE"])
-def delete_caregiver_patient_route():
-    try:
-        # Call the function to delete the relationship
-        response = delete_caregiver_patient(request)
-        return response
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': 'Failed to delete caregiver and patient relationship. Please try again', 'error': str(e)})
-
-
 # Route for getting user data with JWT protection
 @app.route('/get-userdata', methods=['POST'])
 @jwt_required()  # Protect this route with JWT
@@ -222,3 +200,25 @@ def protected():
             return jsonify({"status": "error", "message": "User not found"}), 404
     else:
         return jsonify({"status": "error", "message": "Invalid token data"}), 401
+
+
+# Route to create new family
+@app.route("/family", methods=["POST"])
+def create_family_route():
+    try:
+        # Call the function to delete the relationship
+        response = create_family(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to create family. Please try again', 'error': str(e)}), 500
+
+
+# Route to add user to family
+@app.route("/family/add_user", methods=["POST"])
+def add_user_to_family_route():
+    try:
+        # Call the add_user_to_family function
+        response = add_user_to_family(request)
+        return response
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to add user to family. Please try again', 'error': str(e)}), 500
