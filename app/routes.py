@@ -1,7 +1,7 @@
 from app import app
 from flask import request, jsonify, send_file
 from app.auth import register_user, login_user, get_user_data, reset_password
-from app.img_processing import get_images, find_encodings, save_encodings, send_name, draw_box, object_detection
+from app.img_processing import initialize_family, save_family_encodings, recognize_face, save_profile_picture, send_name, process_image, object_detection, draw_box
 from app.location import save_home_location, get_home_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from app.relations import create_family, add_user_to_family
@@ -40,35 +40,6 @@ def password_reset():
         return jsonify({'status': 'error', 'message': 'Password reset failed, please try again'})
 
 
-# Route for encoding images
-@app.route("/encode-images", methods=["POST"])
-def encode_images():
-    imgList, personIds = get_images()
-
-    if not imgList:
-        return jsonify({"status": "error", "message": "No valid images found to encode"}), 400
-
-    try:
-        print("Finding encodings...")
-        encodeListKnown = find_encodings(imgList)
-        print("Encodings found:", len(encodeListKnown))
-
-        if not encodeListKnown:
-            return jsonify({"status": "error", "message": "No valid face encodings found."}), 400
-
-        print("Saving encodings...")
-        save_encodings(encodeListKnown, personIds)
-    except Exception as e:
-        print(f"Error during encoding or saving: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-    return jsonify({
-        "status": "success",
-        "message": "Images encoded and file saved successfully",
-        "encodedPersons": personIds
-    }), 201
-
-
 def resize_image(image_file):
     """Resize an image to a specified size."""
     image = Image.open(image_file)  # Open the image file
@@ -79,37 +50,6 @@ def resize_image(image_file):
     image_stream.seek(0)  # Rewind the stream
 
     return image_stream  # Return the byte stream
-
-
-# Route for identifying a name from an image
-@app.route("/send-name", methods=["POST"])
-def identify_name():
-    if 'image' not in request.files:
-        return jsonify({'status': 'error', 'message': 'No image provided'}), 400
-
-    image_file = request.files['image']
-    try:
-        # Identify the name from the image
-        identified_name = send_name(image_file)
-        return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_name})
-
-    except ValueError as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 400
-
-
-# Route for drawing a box around faces in an image
-@app.route("/draw-box", methods=["POST"])
-def draw_box_route():
-    if 'image' not in request.files:
-        return jsonify({'status': 'error', 'message': 'No image provided'}), 400
-
-    image_file = request.files['image']  # Get the image file
-    try:
-        img_bytes = draw_box(image_file)  # Draw boxes around detected faces
-        return send_file(img_bytes, mimetype='image/jpeg', as_attachment=False, download_name='annotated_image.jpg')
-
-    except ValueError as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
 # Route for object detection in images
@@ -222,3 +162,29 @@ def add_user_to_family_route():
         return response
     except Exception as e:
         return jsonify({'status': 'error', 'message': 'Failed to add user to family. Please try again', 'error': str(e)}), 500
+
+
+@app.route('/save_profile_picture/<user_id>/<family_id>', methods=['POST'])
+def save_profile_picture_route(user_id, family_id):
+    """Save the profile picture for a user and update the encodings."""
+    image_file = request.files['image']
+    save_profile_picture(user_id, family_id, image_file)
+    return jsonify({"message": f"Profile picture for user {user_id} saved in family {family_id}."}), 200
+
+
+@app.route('/detect_faces/<family_id>', methods=['POST'])
+def detect_faces_route(family_id):
+    """Detect faces in the uploaded image and recognize them."""
+    image_file = request.files['image']
+    face_locations, face_encodings, new_image = process_image(image_file)
+
+    if not face_encodings:  # If no faces were found
+        return jsonify({"message": "No faces found."}), 404
+
+    # Recognize each face
+    recognized_faces = []
+    for face_encoding in face_encodings:
+        recognized_name = recognize_face(face_encoding, family_id)
+        recognized_faces.append(recognized_name)
+
+    return jsonify({"recognized_faces": recognized_faces}), 200

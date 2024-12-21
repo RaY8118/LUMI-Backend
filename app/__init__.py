@@ -26,10 +26,5 @@ jwt = JWTManager(app)
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Initialize image processing module if needed
-from app.img_processing import initialize
-with app.app_context():
-    initialize() # Call any setup functions within the application context
-
 # Import routes
 from app import routes
