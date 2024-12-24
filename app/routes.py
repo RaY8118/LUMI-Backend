@@ -178,13 +178,16 @@ def detect_faces_route(family_id):
     image_file = request.files['image']
     face_locations, face_encodings, new_image = process_image(image_file)
 
+    if not image_file:
+        return jsonify({"status": "error", "message": "No image provided."}), 400
     if not face_encodings:  # If no faces were found
-        return jsonify({"message": "No faces found."}), 404
+        return jsonify({"status": "success", "message": "No faces found."}), 200
 
     # Recognize each face
     recognized_faces = []
     for face_encoding in face_encodings:
         recognized_name = recognize_face(face_encoding, family_id)
         recognized_faces.append(recognized_name)
+        print(recognized_faces)
 
-    return jsonify({"recognized_faces": recognized_faces}), 200
+    return jsonify({"status": "success", "message": "Identified person", "name": recognized_faces}), 200
