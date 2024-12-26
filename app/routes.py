@@ -1,8 +1,8 @@
 from app import app
-from flask import request, jsonify, send_file
+from flask import request, jsonify
 from app.auth import register_user, login_user, get_user_data, reset_password
-from app.img_processing import initialize_family, save_family_encodings, recognize_face, save_profile_picture, send_name, process_image, object_detection, draw_box
-from app.location import save_home_location, get_home_location
+from app.img_processing import recognize_face, save_profile_picture, process_image, object_detection
+from app.location import save_home_location, get_home_location, save_current_location
 from app.reminder import get_reminders, post_reminders, delete_reminders, update_reminders
 from app.relations import create_family, add_user_to_family
 from PIL import Image
@@ -74,7 +74,7 @@ def obj_detection():
 
 # Route for saving home location
 @app.route("/safe-location", methods=["POST"])
-def homelocation():
+def savehomelocation():
     return save_home_location(request)
 
 
@@ -82,6 +82,12 @@ def homelocation():
 @app.route("/safe-location", methods=["GET"])
 def gethomelocation():
     return get_home_location(request)
+
+
+# Route for saving current location
+@app.route("/curr-location", methods=["POST"])
+def savecurrlocation():
+    return save_current_location(request)
 
 
 # Route for getting reminders

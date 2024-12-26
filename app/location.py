@@ -39,6 +39,36 @@ def save_home_location(request):
     return jsonify({"status": "success", "message": "Home location saved successfully"}), 201
 
 
+def save_current_location(request):
+    """Save and update user's current location in the database"""
+    data = request.json
+    user_id = data.get('userId')
+    coords = data.get('coords')
+
+    if not user_id or not coords:
+        return jsonify({"status": "error", "message": "User ID and current location data is required"}), 400
+
+    latitude = coords.get('latitude')
+    longitude = coords.get('longitude')
+
+    if latitude is None or longitude is None:
+        return jsonify({"status": "success", "message": "Latitude and Longitude are required"}), 400
+
+    user_data = {
+        "curr_location": {
+            "latitude": latitude,
+            "longitude": longitude
+        }
+    }
+
+    location_collection.update_one(
+        {"userId": user_id},
+        {"$set": {"curr_location": user_data["curr_location"]}},
+    )
+
+    return jsonify({"status": "success", "message": "Current location updated successfully"}), 201
+
+
 def get_home_location(request):
     try:
         # Get user ID from route parameters
