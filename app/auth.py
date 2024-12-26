@@ -6,6 +6,7 @@ from config.config import Config
 from datetime import timedelta
 # Access the MongoDB users collection
 user_collection = mongo.db.users
+families_collection = mongo.db.families
 authenticate = Config.init_firebase()
 
 
@@ -62,7 +63,9 @@ def register_user(request):
             "password": bcrypt.generate_password_hash(password).decode('utf-8'),
             "role": role,
             "userId": custom_id,
-            "firebase_uid": firebase_uid
+            "firebase_uid": firebase_uid,
+            "family_id": None,
+            "profile_image": None
         }
         user_collection.insert_one(new_user)
 
@@ -111,32 +114,26 @@ def get_user_data(user_id):
         return None  # Return None if no user ID provided
 
     user = user_collection.find_one({"userId": userId})  # Find user by ID
-
     if not user:
         return None
+    family = families_collection.find_one({"family_id": user["family_id"]})
+    members_details = []
+    if family and "members" in family:
+        members_ids = family["members"]
+        members_details = list(user_collection.find(
+            {"userId": {"$in": members_ids}},
+            {"_id": 0, "userId": 1, "name": 1}  # Project only necessary fields
+        ))
 
-    # Structure user data differently based on role
-    if user["role"] == "CG":  # Caregiver role
-        user_data = {
-            "name": user["name"],
-            "email": user["email"],
-            "mobile": user["mobile"],
-            "role": user["role"],
-            "userId": user["userId"],
-            "patients": user.get("patients", [])  # Get patients list if exists
-
-        }
-    else:  # Other roles
-        user_data = {
-            "name": user["name"],
-            "email": user["email"],
-            "mobile": user["mobile"],
-            "role": user["role"],
-            "userId": user["userId"],
-            # Get caregivers list if exists
-            "caregivers": user.get("caregivers", [])
-        }
-
+    user_data = {
+        "userId": user["userId"],
+        "name": user["name"],
+        "email": user["email"],
+        "mobile": user["mobile"],
+        "role": user["role"],
+        "familyId": user["family_id"],
+        "members": members_details
+    }
     return user_data  # Return the structured user data
 
 

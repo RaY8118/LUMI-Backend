@@ -21,21 +21,52 @@ def save_home_location(request):
     if latitude is None or longitude is None:
         return jsonify({"status": "error", "message": "Latitude and Longitude are required"}), 400
 
-    home_location = {
+    user_data = {
         "userId": user_id,
-        "latitude": latitude,
-        "longitude": longitude,
-        "type": "home_location"  # Specify the type of location
+        "home_location": {
+            "latitude": latitude,
+            "longitude": longitude
+        }
     }
 
     # Save the home location, updating if it already exists
     location_collection.update_one(
-        {"userId": user_id, "type": "home_location"},
-        {"$set": home_location},
+        {"userId": user_id},  # Match by userId only
+        # Update or set home_location
+        {"$set": {"home_location": user_data["home_location"]}},
         upsert=True  # Create a new document if no match is found
     )
-
     return jsonify({"status": "success", "message": "Home location saved successfully"}), 201
+
+
+def save_current_location(request):
+    """Save and update user's current location in the database"""
+    data = request.json
+    user_id = data.get('userId')
+    coords = data.get('coords')
+
+    if not user_id or not coords:
+        return jsonify({"status": "error", "message": "User ID and current location data is required"}), 400
+
+    latitude = coords.get('latitude')
+    longitude = coords.get('longitude')
+
+    if latitude is None or longitude is None:
+        return jsonify({"status": "success", "message": "Latitude and Longitude are required"}), 400
+
+    user_data = {
+        "curr_location": {
+            "latitude": latitude,
+            "longitude": longitude
+        }
+    }
+
+    location_collection.update_one(
+        {"userId": user_id},
+        {"$set": {"curr_location": user_data["curr_location"]}},
+    )
+
+    return jsonify({"status": "success", "message": "Current location updated successfully"}), 201
 
 
 def get_home_location(request):
@@ -44,15 +75,22 @@ def get_home_location(request):
         userId = request.args.get('userId')
 
         # Retrieve the user's home location from the database
-        home_location = location_collection.find_one(
-            {"userId": userId, "type": "home_location"}
+        user_data = location_collection.find_one(
+            {"userId": userId}
         )
 
-        if not home_location:
-            return jsonify({"status": "error", "message": "Home location not found"}), 404
+        if not user_data:
+            return jsonify({"status": "error", "message": "Home location not found! \n Please save your home location now!!!"}), 404
 
-        # Return only the coordinates in the response
-        return jsonify({"status": "success", "coords": {"latitude": home_location['latitude'], "longitude": home_location['longitude']}}), 200
+        home_location = user_data["home_location"]
+        latitude = home_location.get("latitude")
+        longitude = home_location.get("longitude")
+
+        if latitude is None or longitude is None:
+            return jsonify({"status": "error", "message": "Home location coordinates are incomplete"}), 400
+
+        # Return the coordinates in the response
+        return jsonify({"status": "success", "coords": {"latitude": latitude, "longitude": longitude}}), 200
 
     except Exception as e:
         return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500

@@ -6,101 +6,52 @@ import numpy as np
 import io
 from flask import current_app as app
 import logging
+from app import mongo
 
 from ultralytics import YOLO
 # Suppress unnecessary logging from YOLO
 logging.getLogger('ultralytics').setLevel(logging.CRITICAL)
 
 # Load the YOLO model
-model = YOLO("../model/yolov10b.pt")
+model = YOLO("model/yolov10b.pt")
+user_collection = mongo.db.users
 
 
-def initialize():
-    """Initialize the application, creating the upload folder and loading encodings."""
-    with app.app_context():
-        # Create upload folder if it doesn't exist
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.makedirs(app.config['UPLOAD_FOLDER'])
-        else:
-            pass
-        # Load known face encodings and IDs from file
-        try:
-            with open("resources/EncodeFile.p", 'rb') as file:
-                global encodeListKnown, studentIds
-                encodeListKnown, studentIds = pickle.load(file)
-        except FileNotFoundError:
-            print("EncodeFile.p not found, starting with an empty list.")
+def initialize_family(family_id):
+    """Initialize encodings for a specific family."""
+    encodng_file = f"resources/family_{family_id}_encodefile.p"
+
+    try:
+        with open(encodng_file, 'rb') as file:
+            global encodeListKnown, userIds
+            encodeListKnown, userIds = pickle.load(file)
+    except FileNotFoundError:
+        print(
+            f"Encoding file for family {family_id} not found, starting with an empty list")
+        encodeListKnown, userIds = [], []
 
 
-def get_images():
-    """Load images from the upload folder and return them with their corresponding IDs."""
-    pathlist = os.listdir(app.config['UPLOAD_FOLDER'])
-    imgList = []
-    personIds = []  # List to hold IDs of persons
-
-    for path in pathlist:
-        img_path = os.path.join(app.config['UPLOAD_FOLDER'], path)
-        img = cv2.imread(img_path)  # Read the image
-
-        if img is None:
-            print(f"Error loading image: {img_path}")
-            continue
-
-        imgList.append(img)
-        # Extract ID from the filename
-        personIds.append(os.path.splitext(path)[0])
-
-    if not imgList:
-        print("No valid images loaded.")
-    else:
-        print(f"Loaded {len(imgList)} images successfully.")
-
-    return imgList, personIds  # Return the list of images and their IDs
+def save_family_encodings(family_id, encodeListKnown, personIds):
+    """Save encodings for a specific family"""
+    encoding_file = f"resources/family_{family_id}_encodefile.p"
+    with open(encoding_file, 'wb') as file:
+        pickle.dump([encodeListKnown, personIds], file)
+    print(f"Encodings for family {family_id} saved successfully!")
 
 
-def find_encodings(imageslist):
-    """Find and return face encodings for a list of images."""
-    encodeList = []
-    for index, img in enumerate(imageslist):
-        try:
-            print(f"Processing image {index + 1}/{len(imageslist)}")
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            print(f"Converted image {index + 1} to RGB format.")
-            encodings = face_recognition.face_encodings(img_rgb)
-            if encodings:
-                encodeList.append(encodings[0])
-                print(f"Encoding found for image {index + 1}.")
-            else:
-                print(f"No faces found in image {index + 1}.")
-        except Exception as e:
-            print(f"Error processing image {index + 1}: {e}")
-    return encodeList
-
-
-def save_encodings(encodeListKnown, personIds):
-    """Save the known face encodings and IDs to a file."""
-    encodeListKnownWithIds = [encodeListKnown,
-                              personIds]  # Combine encodings and IDs
-    with open("resources/EncodeFile.p", "wb") as file:
-        pickle.dump(encodeListKnownWithIds, file)  # Save to file
-    print("File saved")
-
-
-def recognize_face(encoding_to_check):
-    """Recognize a face given its encoding and return the corresponding name."""
-    # Compare the given encoding with known encodings
+def recognize_face(encoding_to_check, family_id):
+    """Recognize a face for a specific family."""
+    initialize_family(family_id)
     matches = face_recognition.compare_faces(
         encodeListKnown, encoding_to_check)
     face_distances = face_recognition.face_distance(
-        encodeListKnown, encoding_to_check)  # Calculate distances
-    # Find the index of the closest match
+        encodeListKnown, encoding_to_check)
     best_match_index = np.argmin(face_distances)
 
-    if matches[best_match_index]:  # Check if there's a match
-        name = studentIds[best_match_index]  # Get the corresponding name
-        return name
+    if matches[best_match_index]:
+        return userIds[best_match_index]
     else:
-        return "Unknown"  # Return "Unknown" if no match
+        return "Unknown"
 
 
 def process_image(image_file):
@@ -116,12 +67,14 @@ def process_image(image_file):
 
     # Convert image to RGB for face recognition
     rgb_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
-    
+
     # Check the RGB image shape
     print(f"RGB Image Shape: {rgb_image.shape}")  # Debugging line
 
-    face_locations = face_recognition.face_locations(rgb_image)  # Find face locations
-    face_encodings = face_recognition.face_encodings(rgb_image, face_locations)  # Get face encodings
+    face_locations = face_recognition.face_locations(
+        rgb_image)  # Find face locations
+    face_encodings = face_recognition.face_encodings(
+        rgb_image, face_locations)  # Get face encodings
 
     print(f"Detected {len(face_locations)} faces.")  # Debugging line
     print(f"Face locations: {face_locations}")  # Debugging line
@@ -129,12 +82,13 @@ def process_image(image_file):
 
     return face_locations, face_encodings, new_image
 
+
 def send_name(image_file):
     """Identify faces in an image and return the name of the first detected face."""
     face_locations, face_encodings, new_image = process_image(image_file)
-    
+
     if not face_encodings:  # Check if no faces were found
-        return "Unknown"
+        return "NO face detected"
 
     for face_encoding in face_encodings:
         identified_name = recognize_face(face_encoding)  # Recognize the face
@@ -157,6 +111,62 @@ def draw_box(image_file):
     # Convert to bytes for sending
     img_bytes = io.BytesIO(img_encoded.tobytes())
     return img_bytes  # Return the processed image bytes
+
+
+def save_profile_picture(user_id, family_id, image_file):
+    """Save the user's profile picture and generate face encodings for the family"""
+    # Define the directory for storing family images
+    family_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(family_id))
+
+    # Create the family folder if it doesn't exists
+    if not os.path.exists(family_folder):
+        os.makedirs(family_folder)
+
+    # Define the path where the profile picture will be saved
+    file_path = os.path.join(family_folder, f"{user_id}.jpg")
+
+    # Save the uploaded profile picture
+    with open(file_path, 'wb') as f:
+        f.write(image_file.read())
+
+    # Adjust based on your server setup
+    user_collection.update_one(
+        {"userId": user_id},
+        {"$set": {"profile_image": file_path}}
+    )
+    print(file_path)
+    # Load the image and extract face encodings
+    img = cv2.imread(file_path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    # Find the face emcodings for the uploaded image
+    encodings = face_recognition.face_encodings(img_rgb)
+
+    if encodings:
+        # If encodings aare found, save them in the family specific pickle file
+        family_pickle_file = os.path.join(
+            'resources', f"family_{family_id}_encodefile.p")
+
+        try:
+            # Load existing encodings if the file exists
+            with open(family_pickle_file, 'rb') as f:
+                known_encodings, known_ids = pickle.load(f)
+        except FileNotFoundError:
+            known_encodings, known_ids = [], []
+
+        # Append the new encodings and user ID to the lists
+        known_encodings.append(encodings[0])
+        known_ids.append(user_id)
+
+        # Save the updated encodings and IDs back to the family pickle file
+        with open(family_pickle_file, 'wb') as f:
+            pickle.dump([known_encodings, known_ids], f)
+
+        print(
+            f"Profile picture saved for user {user_id} in family {family_id}.")
+
+    else:
+        print(f"No face found in the profile picture for user {user_id}.")
 
 
 def object_detection(image_file):

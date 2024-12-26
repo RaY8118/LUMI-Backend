@@ -4,3 +4,4 @@ object_detection.py
 decoded_image.jpg
 yolo*.pt
 __pycache__
+uploads
