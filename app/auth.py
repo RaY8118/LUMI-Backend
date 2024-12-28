@@ -30,7 +30,7 @@ def validate_password(password):
     return None  # Return None if all checks pass
 
 
-def register_user(request):
+def sign_up_user(request):
     """Register a new user and store their information in the database."""
     data = request.json  # Get JSON data from the request
     name = data.get('name')
@@ -75,7 +75,7 @@ def register_user(request):
         return jsonify({"status": "error", "message": str(e)}), 400
 
 
-def login_user(request):
+def sign_in_user(request):
     """Authenticate a user and generate a JWT access token."""
     data = request.json  # Get JSON data from the request
     email = data.get('email')

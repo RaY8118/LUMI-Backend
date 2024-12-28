@@ -83,36 +83,6 @@ def process_image(image_file):
     return face_locations, face_encodings, new_image
 
 
-def send_name(image_file):
-    """Identify faces in an image and return the name of the first detected face."""
-    face_locations, face_encodings, new_image = process_image(image_file)
-
-    if not face_encodings:  # Check if no faces were found
-        return "NO face detected"
-
-    for face_encoding in face_encodings:
-        identified_name = recognize_face(face_encoding)  # Recognize the face
-        return identified_name  # Return the identified name
-
-
-def draw_box(image_file):
-    """Draw bounding boxes and names around detected faces in an image."""
-    face_locations, face_encodings, new_image = process_image(image_file)
-
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-        name = recognize_face(face_encoding)
-        cv2.rectangle(new_image, (left, top), (right, bottom),
-                      (0, 255, 0), 2)  # Draw rectangle
-        cv2.putText(new_image, name, (left, top - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)  # Put name above the rectangle
-
-    # Encode the image back to bytes
-    _, img_encoded = cv2.imencode('.jpg', new_image)
-    # Convert to bytes for sending
-    img_bytes = io.BytesIO(img_encoded.tobytes())
-    return img_bytes  # Return the processed image bytes
-
-
 def save_profile_picture(user_id, family_id, image_file):
     """Save the user's profile picture and generate face encodings for the family"""
     # Define the directory for storing family images
