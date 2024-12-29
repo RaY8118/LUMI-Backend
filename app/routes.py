@@ -12,7 +12,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Route for user registration
 @app.route("/sign-up", methods=["POST"])
-def sign_up():
+def sign_up_route():
     try:
         response = sign_up_user(request)
         return response
@@ -26,7 +26,7 @@ def sign_up():
 
 # Route for user login
 @app.route("/sign-in", methods=["POST"])
-def sign_in():
+def sign_in_route():
     try:
         response = sign_in_user(request)
         return response
@@ -40,7 +40,7 @@ def sign_in():
 
 # Route for reseting password
 @app.route("/reset-password", methods={"POST"})
-def password_reset():
+def password_reset_route():
     try:
         response = reset_password(request)
         return response
@@ -99,7 +99,7 @@ def get_caregiver_reminders_route():
 
 # Route for patient to create reminders
 @app.route("/patient/reminders", methods=["POST"])
-def postreminders():
+def post_patient_reminders_route():
     try:
         response = patient_post_reminder(request)
         return response
@@ -113,7 +113,7 @@ def postreminders():
 
 # Route for caregiver to create reminders
 @app.route("/caregiver/reminders", methods=["POST"])
-def caregiver_post_reminders():
+def post_caregiver_reminders_route():
     try:
         response = caregiver_post_reminder(request)
         return response
@@ -127,10 +127,10 @@ def caregiver_post_reminders():
 # Route for patient to delete reminders
 
 
-@app.route("/patient/reminders/<reminder_id>", methods=["DELETE"])
-def delete_patient_reminder_route(reminder_id):
+@app.route("/patient/reminders/<user_id>/<rem_id>", methods=["DELETE"])
+def delete_patient_reminder_route(user_id, rem_id):
     try:
-        return patient_delete_reminder(request, reminder_id)
+        return patient_delete_reminder(user_id, rem_id)
     except Exception as e:
         return jsonify({
             "status": "error",
@@ -141,10 +141,10 @@ def delete_patient_reminder_route(reminder_id):
 # Route for caregiver to delete reminders
 
 
-@app.route("/caregiver/reminders/<reminder_id>", methods=["DELETE"])
-def delete_caregiver_reminder_route(reminder_id):
+@app.route("/caregiver/reminders/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"])
+def delete_caregiver_reminder_route(caregiver_id, patient_id, rem_id):
     try:
-        return caregiver_delete_reminder(request, reminder_id)
+        return caregiver_delete_reminder(caregiver_id, patient_id, rem_id)
     except Exception as e:
         return jsonify({
             "status": "error",
@@ -181,19 +181,19 @@ def update_caregiver_reminder_route(reminder_id):
 
 # Route for saving home location
 @app.route("/safe-location", methods=["POST"])
-def savehomelocation():
+def save_home_location_route():
     return save_home_location(request)
 
 
 # Route for getting home location
 @app.route("/safe-location", methods=["GET"])
-def gethomelocation():
+def get_home_location_route():
     return get_home_location(request)
 
 
 # Route for saving current location
 @app.route("/curr-location", methods=["POST"])
-def savecurrlocation():
+def save_curr_location_route():
     return save_current_location(request)
 
 
@@ -258,7 +258,7 @@ def detect_faces_route(family_id):
 
 # Route for object detection in images
 @app.route("/obj-detection", methods=["POST"])
-def obj_detection():
+def obj_detection_route():
     if 'image' not in request.files:
         # Check if the image is in the request
         return jsonify({'status': 'error', 'message': 'No image provided'}), 400
@@ -274,5 +274,3 @@ def obj_detection():
     except ValueError as e:
         # Return error response if something goes wrong
         return jsonify({'status': 'error', 'message': str(e)}), 400
-
-

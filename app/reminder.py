@@ -109,10 +109,7 @@ def delete_reminder(reminder_id):
 
 def patient_get_reminders(request):
     """Retrieve reminders for a specific patient."""
-    data = request.json  # Get JSON data from the request
-
-    # Extract the patient's userId from the request body
-    patient_id = data.get("userId")
+    patient_id = request.args.get("userId")
 
     if not patient_id:
         return jsonify({"status": "error", "message": "Patient ID is required"}), 400
@@ -123,11 +120,8 @@ def patient_get_reminders(request):
 
 def caregiver_get_reminders(request):
     """Retrieve reminders for a caregiver's patient."""
-    data = request.json  # Get JSON data from the request
-
-    # Extract caregiverId and patientId from the request body
-    caregiver_id = data.get("CGId")
-    patient_id = data.get("PATId")
+    caregiver_id = request.args.get("CGId")
+    patient_id = request.args.get("PATId")
 
     if not caregiver_id or not patient_id:
         return jsonify({
@@ -264,36 +258,23 @@ def caregiver_update_reminder(request, reminder_id):
     return update_reminder(reminder_id, update_data)
 
 
-def patient_delete_reminder(request, reminder_id):
+def patient_delete_reminder(user_id, rem_id):
     """Allow a patient to delete their own reminder."""
-    data = get_json_data(request)  # Helper to safely get JSON data
-    if not data:
-        return jsonify({"status": "error", "message": "Invalid JSON data"}), 400
-
-    patient_id = data.get("userId")  # Patient's userId
-
-    if not patient_id:
+    if not user_id:
         return jsonify({"status": "error", "message": "Patient ID is required"}), 400
 
     # Ensure the reminder belongs to the patient
     reminder = reminders_collection.find_one(
-        {"remId": reminder_id, "userId": patient_id})
+        {"remId": rem_id, "userId": user_id})
     if not reminder:
         return jsonify({"status": "error", "message": "Reminder not found or access denied"}), 404
 
     # Call the helper function to delete the reminder
-    return delete_reminder(reminder_id)
+    return delete_reminder(rem_id)
 
 
-def caregiver_delete_reminder(request, reminder_id):
+def caregiver_delete_reminder(caregiver_id, patient_id, rem_id):
     """Allow a caregiver to delete a reminder for a patient."""
-    data = get_json_data(request)  # Helper to safely get JSON data
-    if not data:
-        return jsonify({"status": "error", "message": "Invalid JSON data"}), 400
-
-    caregiver_id = data.get("CGId")  # Caregiver's userId
-    patient_id = data.get("PATId")  # Patient's userId
-
     if not caregiver_id or not patient_id:
         return jsonify({
             "status": "error",
@@ -311,9 +292,9 @@ def caregiver_delete_reminder(request, reminder_id):
 
     # Ensure the reminder belongs to the patient
     reminder = reminders_collection.find_one(
-        {"remId": reminder_id, "userId": patient_id})
+        {"remId": rem_id, "userId": patient_id})
     if not reminder:
         return jsonify({"status": "error", "message": "Reminder not found or access denied"}), 404
 
     # Call the helper function to delete the reminder
-    return delete_reminder(reminder_id)
+    return delete_reminder(rem_id)
