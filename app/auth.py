@@ -30,7 +30,7 @@ def validate_password(password):
     return None  # Return None if all checks pass
 
 
-def register_user(request):
+def sign_up_user(request):
     """Register a new user and store their information in the database."""
     data = request.json  # Get JSON data from the request
     name = data.get('name')
@@ -75,7 +75,7 @@ def register_user(request):
         return jsonify({"status": "error", "message": str(e)}), 400
 
 
-def login_user(request):
+def sign_in_user(request):
     """Authenticate a user and generate a JWT access token."""
     data = request.json  # Get JSON data from the request
     email = data.get('email')
@@ -118,10 +118,18 @@ def get_user_data(user_id):
         return None
     family = families_collection.find_one({"family_id": user["family_id"]})
     members_details = []
+    patient_details = []
     if family and "members" in family:
         members_ids = family["members"]
         members_details = list(user_collection.find(
             {"userId": {"$in": members_ids}},
+            {"_id": 0, "userId": 1, "name": 1}  # Project only necessary fields
+        ))
+
+    if family and "patient" in family:
+        patient_id = family["patient"]
+        patient_details = list(user_collection.find(
+            {"userId": patient_id},
             {"_id": 0, "userId": 1, "name": 1}  # Project only necessary fields
         ))
 
@@ -132,6 +140,7 @@ def get_user_data(user_id):
         "mobile": user["mobile"],
         "role": user["role"],
         "familyId": user["family_id"],
+        "patient": patient_details,
         "members": members_details
     }
     return user_data  # Return the structured user data
