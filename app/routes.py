@@ -4,7 +4,7 @@ from app.auth import sign_up_user, sign_in_user, get_user_data, reset_password
 from app.img_processing import recognize_face, save_profile_picture, process_image, object_detection
 from app.location import save_home_location, get_home_location, save_current_location
 from app.reminder import patient_get_reminders, caregiver_get_reminders, patient_post_reminder, patient_delete_reminder, caregiver_delete_reminder, patient_update_reminder, caregiver_update_reminder, caregiver_post_reminder
-from app.relations import create_family, add_user_to_family
+from app.relations import create_family, add_user_to_family, add_patient_to_family
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -223,6 +223,21 @@ def add_user_to_family_route():
         return jsonify({
             "status": "error",
             "message": "Failed to add user to family. Please try again.",
+            "error": str(e)
+        }), 500
+
+
+# Route to add user to family
+@app.route("/family/add_patient", methods=["POST"])
+def add_patient_to_family_route():
+    try:
+        # Call the add_user_to_family function
+        response = add_patient_to_family(request)
+        return response
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to add patient to family. Please try again.",
             "error": str(e)
         }), 500
 

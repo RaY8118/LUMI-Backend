@@ -118,10 +118,18 @@ def get_user_data(user_id):
         return None
     family = families_collection.find_one({"family_id": user["family_id"]})
     members_details = []
+    patient_details = []
     if family and "members" in family:
         members_ids = family["members"]
         members_details = list(user_collection.find(
             {"userId": {"$in": members_ids}},
+            {"_id": 0, "userId": 1, "name": 1}  # Project only necessary fields
+        ))
+
+    if family and "patient" in family:
+        patient_id = family["patient"]
+        patient_details = list(user_collection.find(
+            {"userId": patient_id},
             {"_id": 0, "userId": 1, "name": 1}  # Project only necessary fields
         ))
 
@@ -132,6 +140,7 @@ def get_user_data(user_id):
         "mobile": user["mobile"],
         "role": user["role"],
         "familyId": user["family_id"],
+        "patient": patient_details,
         "members": members_details
     }
     return user_data  # Return the structured user data
