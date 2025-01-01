@@ -39,6 +39,33 @@ def save_home_location(request):
     return jsonify({"status": "success", "message": "Home location saved successfully"}), 201
 
 
+def get_home_location(request):
+    try:
+        # Get user ID from route parameters
+        userId = request.args.get('userId')
+
+        # Retrieve the user's home location from the database
+        user_data = location_collection.find_one(
+            {"userId": userId}
+        )
+
+        if not user_data:
+            return jsonify({"status": "error", "message": "Home location not found! \n Please save your home location now!!!"}), 404
+
+        home_location = user_data["home_location"]
+        latitude = home_location.get("latitude")
+        longitude = home_location.get("longitude")
+
+        if latitude is None or longitude is None:
+            return jsonify({"status": "error", "message": "Home location coordinates are incomplete"}), 400
+
+        # Return the coordinates in the response
+        return jsonify({"status": "success", "coords": {"latitude": latitude, "longitude": longitude}}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500
+
+
 def save_current_location(request):
     """Save and update user's current location in the database"""
     data = request.json
@@ -69,28 +96,27 @@ def save_current_location(request):
     return jsonify({"status": "success", "message": "Current location updated successfully"}), 201
 
 
-def get_home_location(request):
-    try:
-        # Get user ID from route parameters
-        userId = request.args.get('userId')
+def get_current_location(request):
+    """Get patient's current location from the database"""
+    caregiver_id = request.args.get('CGId')
+    patient_id = request.args.get('PATId')
 
-        # Retrieve the user's home location from the database
-        user_data = location_collection.find_one(
-            {"userId": userId}
-        )
+    if not caregiver_id or not patient_id:
+        return jsonify({"status": "error", "message": "Caregiver ID and Patient ID is required"}), 400
 
-        if not user_data:
-            return jsonify({"status": "error", "message": "Home location not found! \n Please save your home location now!!!"}), 404
+    user_data = location_collection.find_one(
+        {"userId": patient_id}
+    )
 
-        home_location = user_data["home_location"]
-        latitude = home_location.get("latitude")
-        longitude = home_location.get("longitude")
+    if not user_data:
+        return jsonify({"status": "error", "message": "Current location not found! \n Please save your current location now!!!"}), 404
 
-        if latitude is None or longitude is None:
-            return jsonify({"status": "error", "message": "Home location coordinates are incomplete"}), 400
+    curr_location = user_data["curr_location"]
+    latitude = curr_location.get("latitude")
+    longitude = curr_location.get("longitude")
 
-        # Return the coordinates in the response
-        return jsonify({"status": "success", "coords": {"latitude": latitude, "longitude": longitude}}), 200
+    if latitude is None or longitude is None:
+        return jsonify({"status": "error", "message": "Current location coordinates are incomplete"}), 400
 
-    except Exception as e:
-        return jsonify({"status": "error", "message": "Internal Server Error", "details": str(e)}), 500
+    # Return the coordinates in the response
+    return jsonify({"status": "success", "coords": {"latitude": latitude, "longitude": longitude}}), 200

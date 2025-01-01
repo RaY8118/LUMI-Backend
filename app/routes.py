@@ -2,7 +2,7 @@ from app import app
 from flask import request, jsonify
 from app.auth import sign_up_user, sign_in_user, get_user_data, reset_password
 from app.img_processing import recognize_face, save_profile_picture, process_image, object_detection
-from app.location import save_home_location, get_home_location, save_current_location
+from app.location import save_home_location, get_home_location, save_current_location, get_current_location
 from app.reminder import patient_get_reminders, caregiver_get_reminders, patient_post_reminder, patient_delete_reminder, caregiver_delete_reminder, patient_update_reminder, caregiver_update_reminder, caregiver_post_reminder
 from app.relations import create_family, add_user_to_family, add_patient_to_family
 from PIL import Image
@@ -195,6 +195,12 @@ def get_home_location_route():
 @app.route("/curr-location", methods=["POST"])
 def save_curr_location_route():
     return save_current_location(request)
+
+
+# Route for getting home location
+@app.route("/curr-location", methods=["GET"])
+def get_curr_location_route():
+    return get_current_location(request)
 
 
 # Route to create new family
