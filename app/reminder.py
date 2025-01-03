@@ -1,7 +1,6 @@
 from flask import jsonify
 from app import mongo
 import uuid
-
 # Access the MongoDB reminders collection
 reminders_collection = mongo.db.reminders
 user_collection = mongo.db.users
