@@ -5,7 +5,7 @@ from app.img_processing import recognize_face, save_profile_picture, process_ima
 from app.location import save_home_location, get_home_location, save_current_location, get_current_location
 from app.reminder import patient_get_reminders, caregiver_get_reminders, patient_post_reminder, patient_delete_reminder, caregiver_delete_reminder, patient_update_reminder, caregiver_update_reminder, caregiver_post_reminder
 from app.relations import create_family, add_user_to_family, add_patient_to_family
-from app.notifications import store_user_token,custom_push_notification
+from app.notifications import store_user_token, custom_push_notification, get_user_token
 from PIL import Image
 import io
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -304,7 +304,6 @@ def store_token():
     return store_user_token(data)
 
 
-
 @app.route('/send-push-notification', methods=['POST'])
 def send_push_notification():
     try:
@@ -314,5 +313,18 @@ def send_push_notification():
         return jsonify({
             "status": "error",
             "message": "Failed to send notification. Please try again.",
+            "error": str(e)
+        }), 500
+
+
+@app.route('/get-user-token', methods=['GET'])
+def get_token():
+    try:
+        response = get_user_token(request)
+        return response
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to get token. Please try again.",
             "error": str(e)
         }), 500
