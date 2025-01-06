@@ -1,14 +1,38 @@
+from flask import jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
 from app import app
-from flask import request, jsonify
-from app.auth import sign_up_user, sign_in_user, get_user_data, reset_password
-from app.img_processing import recognize_face, save_profile_picture, process_image, object_detection
-from app.location import save_home_location, get_home_location, save_current_location, get_current_location
-from app.reminder import patient_get_reminders, caregiver_get_reminders, patient_post_reminder, patient_delete_reminder, caregiver_delete_reminder, patient_update_reminder, caregiver_update_reminder, caregiver_post_reminder
-from app.relations import create_family, add_user_to_family, add_patient_to_family
-from app.notifications import store_user_token, custom_push_notification, get_user_token
-from PIL import Image
-import io
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.auth import get_user_data, reset_password, sign_in_user, sign_up_user
+from app.img_processing import (
+    object_detection,
+    process_image,
+    recognize_face,
+    save_profile_picture,
+)
+from app.location import (
+    get_current_location,
+    get_home_location,
+    save_current_location,
+    save_home_location,
+)
+from app.notifications import custom_push_notification, get_user_token, store_user_token
+from app.relations import (
+    add_patient_to_family,
+    add_user_to_family,
+    create_family,
+    save_additional_info,
+    get_additional_info,
+)
+from app.reminder import (
+    caregiver_delete_reminder,
+    caregiver_get_reminders,
+    caregiver_post_reminder,
+    caregiver_update_reminder,
+    patient_delete_reminder,
+    patient_get_reminders,
+    patient_post_reminder,
+    patient_update_reminder,
+)
 
 
 # Route for user registration
@@ -18,11 +42,13 @@ def sign_up_route():
         response = sign_up_user(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Registration failed, please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Registration failed, please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for user login
@@ -32,11 +58,13 @@ def sign_in_route():
         response = sign_in_user(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Login failed, please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Login failed, please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for reseting password
@@ -46,19 +74,21 @@ def password_reset_route():
         response = reset_password(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Password reset failed, please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Password reset failed, please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for getting user data with JWT protection
-@app.route('/get-userdata', methods=['POST'])
+@app.route("/get-userdata", methods=["POST"])
 @jwt_required()  # Protect this route with JWT
 def protected():
     current_user = get_jwt_identity()  # Get the current user's identity
-    user_id = current_user.get('userId')
+    user_id = current_user.get("userId")
 
     if user_id:
         user_data = get_user_data(user_id)
@@ -77,11 +107,14 @@ def get_patient_reminders_route():
     try:
         return patient_get_reminders(request)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to retrieve patient reminders. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to retrieve patient reminders. Please try again.",
+                "error": str(e),
+            }
+        ), 500
+
 
 # Route for caregiver to fetch reminders
 
@@ -91,11 +124,13 @@ def get_caregiver_reminders_route():
     try:
         return caregiver_get_reminders(request)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to retrieve patient reminders. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to retrieve patient reminders. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for patient to create reminders
@@ -105,11 +140,13 @@ def post_patient_reminders_route():
         response = patient_post_reminder(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to post patients reminders. Please try again",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to post patients reminders. Please try again",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for caregiver to create reminders
@@ -119,11 +156,14 @@ def post_caregiver_reminders_route():
         response = caregiver_post_reminder(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to post patients reminders. Please try again",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to post patients reminders. Please try again",
+                "error": str(e),
+            }
+        ), 500
+
 
 # Route for patient to delete reminders
 
@@ -133,25 +173,32 @@ def delete_patient_reminder_route(user_id, rem_id):
     try:
         return patient_delete_reminder(user_id, rem_id)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to delete patient reminder. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to delete patient reminder. Please try again.",
+                "error": str(e),
+            }
+        ), 500
+
 
 # Route for caregiver to delete reminders
 
 
-@app.route("/caregiver/reminders/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"])
+@app.route(
+    "/caregiver/reminders/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"]
+)
 def delete_caregiver_reminder_route(caregiver_id, patient_id, rem_id):
     try:
         return caregiver_delete_reminder(caregiver_id, patient_id, rem_id)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to delete caregiver reminder. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to delete caregiver reminder. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for patient to update reminders
@@ -160,11 +207,13 @@ def update_patient_reminder_route(reminder_id):
     try:
         return patient_update_reminder(request, reminder_id)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to update patient reminder. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to update patient reminder. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for caregiver to delete reminders
@@ -173,11 +222,13 @@ def update_caregiver_reminder_route(reminder_id):
     try:
         return caregiver_update_reminder(request, reminder_id)
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to update caregiver reminder. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to update caregiver reminder. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for saving home location
@@ -212,11 +263,13 @@ def create_family_route():
         response = create_family(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to create family. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to create family. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route to add user to family
@@ -227,11 +280,13 @@ def add_user_to_family_route():
         response = add_user_to_family(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to add user to family. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to add user to family. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route to add user to family
@@ -242,25 +297,29 @@ def add_patient_to_family_route():
         response = add_patient_to_family(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to add patient to family. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to add patient to family. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
-@app.route('/save_profile_picture/<user_id>/<family_id>', methods=['POST'])
+@app.route("/save_profile_picture/<user_id>/<family_id>", methods=["POST"])
 def save_profile_picture_route(user_id, family_id):
     """Save the profile picture for a user and update the encodings."""
-    image_file = request.files['image']
+    image_file = request.files["image"]
     save_profile_picture(user_id, family_id, image_file)
-    return jsonify({"message": f"Profile picture for user {user_id} saved in family {family_id}."}), 200
+    return jsonify(
+        {"message": f"Profile picture for user {user_id} saved in family {family_id}."}
+    ), 200
 
 
-@app.route('/detect_faces/<family_id>', methods=['POST'])
+@app.route("/detect_faces/<family_id>", methods=["POST"])
 def detect_faces_route(family_id):
     """Detect faces in the uploaded image and recognize them."""
-    image_file = request.files['image']
+    image_file = request.files["image"]
     face_locations, face_encodings, new_image = process_image(image_file)
 
     if not image_file:
@@ -275,27 +334,34 @@ def detect_faces_route(family_id):
         recognized_faces.append(recognized_name)
         print(recognized_faces)
 
-    return jsonify({"status": "success", "message": "Identified person", "name": recognized_faces}), 200
+    return jsonify(
+        {"status": "success", "message": "Identified person", "name": recognized_faces}
+    ), 200
 
 
 # Route for object detection in images
 @app.route("/obj-detection", methods=["POST"])
 def obj_detection_route():
-    if 'image' not in request.files:
+    if "image" not in request.files:
         # Check if the image is in the request
-        return jsonify({'status': 'error', 'message': 'No image provided'}), 400
+        return jsonify({"status": "error", "message": "No image provided"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     try:
-        identified_objects = object_detection(
-            image_file)  # Perform object detection
+        identified_objects = object_detection(image_file)  # Perform object detection
         # Return identified objects
-        return jsonify({'status': 'success', 'message': 'Identified successfully', 'name': identified_objects})
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Identified successfully",
+                "name": identified_objects,
+            }
+        )
 
     except ValueError as e:
         # Return error response if something goes wrong
-        return jsonify({'status': 'error', 'message': str(e)}), 400
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 
 @app.route("/store-token", methods=["POST"])
@@ -304,27 +370,63 @@ def store_token():
     return store_user_token(data)
 
 
-@app.route('/send-push-notification', methods=['POST'])
+@app.route("/send-push-notification", methods=["POST"])
 def send_push_notification():
     try:
         response = custom_push_notification(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to send notification. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to send notification. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
-@app.route('/get-user-token', methods=['GET'])
+@app.route("/get-user-token", methods=["GET"])
 def get_token():
     try:
         response = get_user_token(request)
         return response
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Failed to get token. Please try again.",
-            "error": str(e)
-        }), 500
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to get token. Please try again.",
+                "error": str(e),
+            }
+        ), 500
+
+
+@app.route("/save-additional-info", methods=["POST"])
+def save_info():
+    try:
+        response = save_additional_info(request)
+        return response
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to save info. Please try again.",
+                "error": str(e),
+            },
+            500,
+        )
+
+
+@app.route("/get-additional-info", methods=["GET"])
+def get_info():
+    try:
+        response = get_additional_info(request)
+        return response
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to get info. Please try again.",
+                "error": str(e),
+            },
+            500,
+        )

@@ -1,20 +1,22 @@
+import logging
+import os
+import pickle
+
 import cv2
 import face_recognition
-import pickle
-import os
 import numpy as np
-import io
 from flask import current_app as app
-import logging
+from ultralytics import YOLO
+
 from app import mongo
 
-from ultralytics import YOLO
 # Suppress unnecessary logging from YOLO
-logging.getLogger('ultralytics').setLevel(logging.CRITICAL)
+logging.getLogger("ultralytics").setLevel(logging.CRITICAL)
 
 # Load the YOLO model
 model = YOLO("model/yolov10b.pt")
 user_collection = mongo.db.users
+info_collection = mongo.db.infomation
 
 
 def initialize_family(family_id):
@@ -22,19 +24,20 @@ def initialize_family(family_id):
     encodng_file = f"resources/family_{family_id}_encodefile.p"
 
     try:
-        with open(encodng_file, 'rb') as file:
+        with open(encodng_file, "rb") as file:
             global encodeListKnown, userIds
             encodeListKnown, userIds = pickle.load(file)
     except FileNotFoundError:
         print(
-            f"Encoding file for family {family_id} not found, starting with an empty list")
+            f"Encoding file for family {family_id} not found, starting with an empty list"
+        )
         encodeListKnown, userIds = [], []
 
 
 def save_family_encodings(family_id, encodeListKnown, personIds):
     """Save encodings for a specific family"""
     encoding_file = f"resources/family_{family_id}_encodefile.p"
-    with open(encoding_file, 'wb') as file:
+    with open(encoding_file, "wb") as file:
         pickle.dump([encodeListKnown, personIds], file)
     print(f"Encodings for family {family_id} saved successfully!")
 
@@ -42,10 +45,8 @@ def save_family_encodings(family_id, encodeListKnown, personIds):
 def recognize_face(encoding_to_check, family_id):
     """Recognize a face for a specific family."""
     initialize_family(family_id)
-    matches = face_recognition.compare_faces(
-        encodeListKnown, encoding_to_check)
-    face_distances = face_recognition.face_distance(
-        encodeListKnown, encoding_to_check)
+    matches = face_recognition.compare_faces(encodeListKnown, encoding_to_check)
+    face_distances = face_recognition.face_distance(encodeListKnown, encoding_to_check)
     best_match_index = np.argmin(face_distances)
 
     if matches[best_match_index]:
@@ -71,10 +72,10 @@ def process_image(image_file):
     # Check the RGB image shape
     print(f"RGB Image Shape: {rgb_image.shape}")  # Debugging line
 
-    face_locations = face_recognition.face_locations(
-        rgb_image)  # Find face locations
+    face_locations = face_recognition.face_locations(rgb_image)  # Find face locations
     face_encodings = face_recognition.face_encodings(
-        rgb_image, face_locations)  # Get face encodings
+        rgb_image, face_locations
+    )  # Get face encodings
 
     print(f"Detected {len(face_locations)} faces.")  # Debugging line
     print(f"Face locations: {face_locations}")  # Debugging line
@@ -86,7 +87,7 @@ def process_image(image_file):
 def save_profile_picture(user_id, family_id, image_file):
     """Save the user's profile picture and generate face encodings for the family"""
     # Define the directory for storing family images
-    family_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(family_id))
+    family_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(family_id))
 
     # Create the family folder if it doesn't exists
     if not os.path.exists(family_folder):
@@ -96,13 +97,12 @@ def save_profile_picture(user_id, family_id, image_file):
     file_path = os.path.join(family_folder, f"{user_id}.jpg")
 
     # Save the uploaded profile picture
-    with open(file_path, 'wb') as f:
+    with open(file_path, "wb") as f:
         f.write(image_file.read())
 
     # Adjust based on your server setup
     user_collection.update_one(
-        {"userId": user_id},
-        {"$set": {"profile_image": file_path}}
+        {"userId": user_id}, {"$set": {"profile_image": file_path}}
     )
     print(file_path)
     # Load the image and extract face encodings
@@ -115,11 +115,12 @@ def save_profile_picture(user_id, family_id, image_file):
     if encodings:
         # If encodings aare found, save them in the family specific pickle file
         family_pickle_file = os.path.join(
-            'resources', f"family_{family_id}_encodefile.p")
+            "resources", f"family_{family_id}_encodefile.p"
+        )
 
         try:
             # Load existing encodings if the file exists
-            with open(family_pickle_file, 'rb') as f:
+            with open(family_pickle_file, "rb") as f:
                 known_encodings, known_ids = pickle.load(f)
         except FileNotFoundError:
             known_encodings, known_ids = [], []
@@ -129,11 +130,10 @@ def save_profile_picture(user_id, family_id, image_file):
         known_ids.append(user_id)
 
         # Save the updated encodings and IDs back to the family pickle file
-        with open(family_pickle_file, 'wb') as f:
+        with open(family_pickle_file, "wb") as f:
             pickle.dump([known_encodings, known_ids], f)
 
-        print(
-            f"Profile picture saved for user {user_id} in family {family_id}.")
+        print(f"Profile picture saved for user {user_id} in family {family_id}.")
 
     else:
         print(f"No face found in the profile picture for user {user_id}.")
@@ -150,7 +150,8 @@ def object_detection(image_file):
     # Check if image was properly decoded
     if image is None:
         raise ValueError(
-            "Error decoding the image. Unsupported or invalid image format.")
+            "Error decoding the image. Unsupported or invalid image format."
+        )
 
     # Predict objects in the image using YOLO
     results = model.predict(image)

@@ -1,8 +1,7 @@
 import requests
-from datetime import datetime, timedelta
 from flask_apscheduler import APScheduler
 from app import mongo
-from flask import  jsonify
+from flask import jsonify
 
 reminders_collection = mongo.db.reminders
 user_collection = mongo.db.users
@@ -43,16 +42,14 @@ def custom_push_notification(request):
 def store_user_token(data):
     """Function to handle storing user tokens."""
     token = data.get("token")
-    user_id = data.get("userId") 
+    user_id = data.get("userId")
 
     if not token:
         return jsonify({"status": "error", "message": "Missing token"}), 400
 
     # Insert or update the token in the database
     tokens_collection.update_one(
-        {"userId": user_id},
-        {"$set": {"token": token}},
-        upsert=True
+        {"userId": user_id}, {"$set": {"token": token}}, upsert=True
     )
 
     return jsonify({"status": "success", "message": "Token stored successfully"}), 200
@@ -62,12 +59,18 @@ def get_user_token(request):
     """Function to get stored token"""
     user_id = request.args.get("userId")
     if not user_id:
-        return jsonify({"status":"error","message":"Missing UserId"}), 400
-    
+        return jsonify({"status": "error", "message": "Missing UserId"}), 400
+
     data = tokens_collection.find_one({"userId": user_id})
-    push_token = data.get('token')
-    
+    push_token = data.get("token")
+
     if not push_token:
         return jsonify({"error": "Push token not found for user."}), 400
-    
-    return jsonify({"status":"success","message":"Token retrievied successfully", "token": push_token})
+
+    return jsonify(
+        {
+            "status": "success",
+            "message": "Token retrievied successfully",
+            "token": push_token,
+        }
+    )
