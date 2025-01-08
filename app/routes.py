@@ -309,11 +309,25 @@ def add_patient_to_family_route():
 @app.route("/save_profile_picture/<user_id>/<family_id>", methods=["POST"])
 def save_profile_picture_route(user_id, family_id):
     """Save the profile picture for a user and update the encodings."""
+    if "image" not in request.files:
+        return jsonify({"status": "error", "message": "No image file provided"}), 400
     image_file = request.files["image"]
-    save_profile_picture(user_id, family_id, image_file)
-    return jsonify(
-        {"message": f"Profile picture for user {user_id} saved in family {family_id}."}
-    ), 200
+    try:
+        save_profile_picture(user_id, family_id, image_file)
+        return jsonify(
+            {
+                "status": "success",
+                "message": f"Profile picture for user {user_id} saved in family {family_id}.",
+            }
+        ), 200
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "An error occured while saving the profile picture",
+                "error": str(e),
+            }
+        ), 500
 
 
 @app.route("/detect_faces/<family_id>", methods=["POST"])
