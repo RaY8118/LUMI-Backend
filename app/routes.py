@@ -33,6 +33,7 @@ from app.reminder import (
     patient_post_reminder,
     patient_update_reminder,
 )
+from app.user import updatePersonalInfo
 
 
 # Route for user registration
@@ -99,6 +100,22 @@ def protected():
             return jsonify({"status": "error", "message": "User not found"}), 404
     else:
         return jsonify({"status": "error", "message": "Invalid token data"}), 401
+
+
+# Route for updating user Info
+@app.route("/update-info", methods=["PUT"])
+def updateinfo():
+    try:
+        response = updatePersonalInfo(request)
+        return response
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Failed to update personal info. Please try again.",
+                "error": str(e),
+            }
+        ), 500
 
 
 # Route for patient to fetch reminders
