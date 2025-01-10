@@ -23,6 +23,16 @@ def create_family(request):
             {"status": "error", "message": "Caregiver not found or invalid role"}
         ), 400
 
+    # Check if the caregiver already has a family
+    existing_family = families_collection.find_one({"members": caregiver_id})
+    if existing_family:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Caregiver already belong to a family",
+                "familyId": existing_family["family_id"],
+            }
+        ), 400
     # Generate a unique family ID
     family_id = str(uuid.uuid4().hex[:8])
 

@@ -13,9 +13,11 @@ def updatePersonalInfo(request):
     if not user_id:
         return jsonify({"status": "error", "message": "User Id is required!"}), 400
 
-    update_data = {"name": data.get("name"), "mobile": data.get("mobile")}
-
-    update_data = {k: v for k, v in update_data.items() if v is not None}
+    update_data = {}
+    if "name" in data and data["name"]:
+        update_data["name"] = data["name"]
+    if "mobile" in data and data["mobile"]:
+        update_data["mobile"] = data["mobile"]
 
     if not update_data:
         return jsonify({"status": "error", "message": "No valid fields to update"}), 400
