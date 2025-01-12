@@ -14,6 +14,7 @@ from app.location import (
     get_home_location,
     save_current_location,
     save_home_location,
+    save_patient_home_location,
 )
 from app.notifications import custom_push_notification, get_user_token, store_user_token
 from app.relations import (
@@ -252,6 +253,12 @@ def update_caregiver_reminder_route(reminder_id):
 @app.route("/safe-location", methods=["POST"])
 def save_home_location_route():
     return save_home_location(request)
+
+
+# Route for saving home location
+@app.route("/caregiver/safe-location", methods=["POST"])
+def save_patient_home_location_route():
+    return save_patient_home_location(request)
 
 
 # Route for getting home location

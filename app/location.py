@@ -4,6 +4,7 @@ from app import mongo
 
 # Access the MongoDB location collection
 location_collection = mongo.db.location
+user_collection = mongo.db.users
 
 
 def save_home_location(request):
@@ -36,6 +37,56 @@ def save_home_location(request):
     # Save the home location, updating if it already exists
     location_collection.update_one(
         {"userId": user_id},  # Match by userId only
+        # Update or set home_location
+        {"$set": {"home_location": user_data["home_location"]}},
+        upsert=True,  # Create a new document if no match is found
+    )
+    return jsonify(
+        {"status": "success", "message": "Home location saved successfully"}
+    ), 201
+
+
+def save_patient_home_location(request):
+    """Save or update the user's home location in the database."""
+    data = request.json  # Get JSON data from the request
+    caregiver_id = data.get("CGId")  # Extract user ID
+    patient_id = data.get("PATId")  # Extract user ID
+    coords = data.get("coords")  # Extract coordinates
+
+    if not caregiver_id or not patient_id or not coords:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "Patient ID, Caregiver ID and home location data are required",
+            }
+        ), 400
+
+    caregiver = user_collection.find_one({"userId": caregiver_id})
+    patient = user_collection.find_one({"userId": patient_id})
+    if caregiver["family_id"] != patient["family_id"]:
+        return jsonify(
+            {
+                "status": "error",
+                "message": "You don not have the permission to handle reminders for this patient",
+            }
+        ), 400
+
+    latitude = coords.get("latitude")  # Extract latitude
+    longitude = coords.get("longitude")  # Extract longitude
+
+    if latitude is None or longitude is None:
+        return jsonify(
+            {"status": "error", "message": "Latitude and Longitude are required"}
+        ), 400
+
+    user_data = {
+        "userId": patient_id,
+        "home_location": {"latitude": latitude, "longitude": longitude},
+    }
+
+    # Save the home location, updating if it already exists
+    location_collection.update_one(
+        {"userId": patient_id},  # Match by userId only
         # Update or set home_location
         {"$set": {"home_location": user_data["home_location"]}},
         upsert=True,  # Create a new document if no match is found

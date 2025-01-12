@@ -9,3 +9,6 @@ cmake
 face-recognition
 geopy
 ultralytics
+torch
+torchvision
+pyrebase4
