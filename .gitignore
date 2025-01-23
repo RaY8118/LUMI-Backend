@@ -5,4 +5,7 @@ decoded_image.jpg
 yolo*.pt
 __pycache__
 uploads
-myenv
+myenva
+.venv/
+.dockerignore
+Dockerfile
