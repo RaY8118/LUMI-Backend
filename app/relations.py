@@ -172,10 +172,11 @@ def save_additional_info(request):
 
     if not relation or not tagline or not trigger_memory:
         return jsonify(
-            {"status": "error", "message": "Please provide all details properply"}
+            {"status": "error", "message": "Please provide all details properly"}
         ), 400
 
     user_data = user_collection.find_one({"userId": user_id})
+    existing_info = info_collection.find_one({"userId": user_id})
 
     additional_info = {
         "userId": user_id,
@@ -184,15 +185,22 @@ def save_additional_info(request):
         "tagline": tagline,
         "triggerMemory": trigger_memory,
     }
-
-    info_collection.insert_one(additional_info)
-
-    return jsonify(
-        {
-            "status": "success",
-            "message": "Successfully added addtional information!!",
-        }
-    ), 201
+    if not existing_info:
+        info_collection.insert_one(additional_info)
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Successfully added additional information!!",
+            }
+        ), 201
+    else:
+        info_collection.update_one({"userId": user_id}, {"$set": additional_info})
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Successfully updated the addtional information!!",
+            }
+        ), 200
 
 
 def get_additional_info(request):
