@@ -9,3 +9,7 @@ myenva
 .venv/
 .dockerignore
 Dockerfile
+LUMIDATABASE.xlsx
+database.js
+database.py
+output.json

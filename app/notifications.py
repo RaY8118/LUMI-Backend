@@ -31,7 +31,8 @@ def custom_push_notification(request):
 
     # Send the notification using the Expo push service
     try:
-        response = requests.post("https://exp.host/--/api/v2/push/send", json=payload)
+        response = requests.post(
+            "https://exp.host/--/api/v2/push/send", json=payload)
         response.raise_for_status()
 
         return jsonify({"success": "Notification sent successfully"}), 200
