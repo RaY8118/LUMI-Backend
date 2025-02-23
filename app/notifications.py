@@ -1,7 +1,8 @@
 import requests
-from flask_apscheduler import APScheduler
-from app import mongo
 from flask import jsonify
+from flask_apscheduler import APScheduler
+
+from app import mongo
 
 reminders_collection = mongo.db.reminders
 user_collection = mongo.db.users
@@ -10,6 +11,7 @@ scheduler = APScheduler()
 
 
 def custom_push_notification(request):
+    """Function to send custom expo notifications directly to the patients"""
     data = request.get_json()
     patient_id = data.get("PATId")
     message = data.get("message")
@@ -31,8 +33,7 @@ def custom_push_notification(request):
 
     # Send the notification using the Expo push service
     try:
-        response = requests.post(
-            "https://exp.host/--/api/v2/push/send", json=payload)
+        response = requests.post("https://exp.host/--/api/v2/push/send", json=payload)
         response.raise_for_status()
 
         return jsonify({"success": "Notification sent successfully"}), 200

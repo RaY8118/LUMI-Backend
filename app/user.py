@@ -5,7 +5,7 @@ from app import mongo
 user_collection = mongo.db.users
 
 
-def updatePersonalInfo(request):
+def update_personal_info(request):
     data = request.json
 
     user_id = data.get("userId")
@@ -28,9 +28,13 @@ def updatePersonalInfo(request):
         return jsonify({"status": "error", "message": "User not found"}), 404
 
     if result.modified_count == 0:
-        return jsonify(
-            {"status": "success", "message": "User found, but no changes were made"}
-        ), 200
-    return jsonify(
-        {"status": "success", "message": "User info updated successfully"}
-    ), 200
+        return (
+            jsonify(
+                {"status": "success", "message": "User found, but no changes were made"}
+            ),
+            200,
+        )
+    return (
+        jsonify({"status": "success", "message": "User info updated successfully"}),
+        200,
+    )

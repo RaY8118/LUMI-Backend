@@ -1,9 +1,15 @@
-from flask import Flask
-from config.config import Config
-from dotenv import load_dotenv
 import os
-from flask_socketio import SocketIO
+
+from dotenv import load_dotenv
+from flask import Flask
+from flask_bcrypt import Bcrypt
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from flask_pymongo import PyMongo
 from flask_session import Session
+from flask_socketio import SocketIO
+
+from config.config import Config
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,10 +19,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Initialize extensions
-from flask_bcrypt import Bcrypt
-from flask_cors import CORS
-from flask_pymongo import PyMongo
-from flask_jwt_extended import JWTManager
 
 # Set up extensions
 bcrypt = Bcrypt(app)

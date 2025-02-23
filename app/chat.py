@@ -1,16 +1,19 @@
-from flask_socketio import join_room, leave_room, send
 import random
-from flask import jsonify
-from string import ascii_uppercase
-from app import mongo
 from datetime import datetime
+from string import ascii_uppercase
+
 import pytz
+from flask import jsonify
+from flask_socketio import join_room, leave_room, send
+
+from app import mongo
 
 rooms_collection = mongo.db.rooms
 messages_collection = mongo.db.messages
 
 
 def generate_unique_code(length):
+    """Function to generate random unique code for room codes"""
     while True:
         code = "".join(random.choice(ascii_uppercase) for _ in range(length))
         if not rooms_collection.find_one({"roomId": code}):
@@ -40,14 +43,17 @@ def home(request):
     elif not rooms_collection.find_one({"roomId": room}):
         return jsonify({"status": "error", "message": "Room does not exist"}), 400
 
-    return jsonify(
-        {
-            "status": "success",
-            "message": "You have joined the room successfully",
-            "roomId": room,
-            "name": name,
-        }
-    ), 200
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "message": "You have joined the room successfully",
+                "roomId": room,
+                "name": name,
+            }
+        ),
+        200,
+    )
 
 
 def room(request):

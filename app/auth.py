@@ -74,9 +74,10 @@ def sign_up_user(request):
         }
         user_collection.insert_one(new_user)
 
-        return jsonify(
-            {"status": "success", "message": "User created successfully!!"}
-        ), 201
+        return (
+            jsonify({"status": "success", "message": "User created successfully!!"}),
+            201,
+        )
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
@@ -94,9 +95,10 @@ def sign_in_user(request):
 
         user = user_collection.find_one({"firebase_uid": firebase_uid})
         if not user:
-            return jsonify(
-                {"status": "error", "message": "User not found in database"}
-            ), 404
+            return (
+                jsonify({"status": "error", "message": "User not found in database"}),
+                404,
+            )
 
         access_token = create_access_token(
             identity={"userId": user["userId"]}, expires_delta=timedelta(weeks=1)
@@ -111,24 +113,29 @@ def sign_in_user(request):
 
         # Check if the error message contains "INVALID_LOGIN_CREDENTIALS"
         if "INVALID_LOGIN_CREDENTIALS" in error_message:
-            return jsonify(
-                {"status": "error", "message": "Invalid email or password"}
-            ), 401
+            return (
+                jsonify({"status": "error", "message": "Invalid email or password"}),
+                401,
+            )
 
         # For any other errors, return a generic error message
-        return jsonify(
-            {"status": "error", "message": "Authentication failed. Please try again."}
-        ), 401
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Authentication failed. Please try again.",
+                }
+            ),
+            401,
+        )
 
 
 def get_user_data(user_id):
     """Retrieve user data based on user ID."""
-    userId = user_id  # Assign user ID
-
-    if not userId:
+    if not user_id:
         return None  # Return None if no user ID provided
 
-    user = user_collection.find_one({"userId": userId})  # Find user by ID
+    user = user_collection.find_one({"userId": user_id})  # Find user by ID
     if not user:
         return None
     family = families_collection.find_one({"family_id": user["family_id"]})
@@ -174,8 +181,14 @@ def reset_password(request):
 
     try:
         authenticate.send_password_reset_email(email)
-        return jsonify(
-            {"status": "success", "message": "Password reset email sent successfully"}
-        ), 200
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Password reset email sent successfully",
+                }
+            ),
+            200,
+        )
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400

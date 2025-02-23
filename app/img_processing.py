@@ -1,4 +1,3 @@
-import logging
 import os
 import pickle
 
@@ -9,9 +8,6 @@ from flask import current_app as app
 from ultralytics import YOLO
 
 from app import mongo
-
-# Suppress unnecessary logging from YOLO
-logging.getLogger("ultralytics").setLevel(logging.CRITICAL)
 
 # Load the YOLO model
 model = YOLO("model/yolov10b.pt")
