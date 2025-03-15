@@ -3,8 +3,9 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app import app
 from app.auth import get_user_data, reset_password, sign_in_user, sign_up_user
-from app.img_processing import (object_detection, process_image,
-                                recognize_face, save_profile_picture)
+from app.img_processing import (gemini_detection, object_detection,
+                                process_image, recognize_face,
+                                save_profile_picture)
 from app.location import (get_current_location, get_home_location,
                           save_current_location, save_home_location,
                           save_patient_home_location)
@@ -429,6 +430,30 @@ def obj_detection_route():
 
     try:
         identified_objects = object_detection(image_file)  # Perform object detection
+        # Return identified objects
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Identified successfully",
+                "name": identified_objects,
+            }
+        )
+
+    except ValueError as e:
+        # Return error response if something goes wrong
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/gemini-detection", methods=["POST"])
+def gemini_detection_route():
+    if "image" not in request.files:
+        # Check if the image is in the request
+        return jsonify({"status": "error", "message": "No image provided"}), 400
+
+    image_file = request.files["image"]
+
+    try:
+        identified_objects = gemini_detection(image_file)  # Perform object detection
         # Return identified objects
         return jsonify(
             {

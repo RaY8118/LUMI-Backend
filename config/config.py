@@ -10,6 +10,7 @@ class Config:
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     DEBUG = os.getenv("DEBUG", "False") == "True"
+    GEMINI_API_KEY = os.getenv("GEMINIAPI_KEY")
 
     # Firebase settings
     FIREBASE_API_KEY = os.getenv("API_KEY")

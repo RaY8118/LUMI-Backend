@@ -4,7 +4,10 @@ import pickle
 import cv2
 import face_recognition
 import numpy as np
+import PIL.Image
 from flask import current_app as app
+from google import genai
+from google.genai import types
 from ultralytics import YOLO
 
 from app import mongo
@@ -157,3 +160,25 @@ def object_detection(image_file):
     unique_detected_objects = list(set(detected_objects))
 
     return unique_detected_objects
+
+
+def gemini_detection(image_file):
+    """Detect objects in an image using the gemini 2.0 model"""
+
+    image = PIL.Image.open(image_file)
+
+    if image is None:
+        raise ValueError(
+            "Error decoding the image. UNsupported or invalid image format."
+        )
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("API key is missing. Checking your .env file.")
+    client = genai.Client(api_key=api_key)
+    prompt = "Just state the object name dont form any sentence"
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[image, prompt],
+    )
+    print(response.text)
+    return response.text
