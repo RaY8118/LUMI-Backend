@@ -12,3 +12,4 @@ ultralytics
 torch
 torchvision
 pyrebase4
+google-genai

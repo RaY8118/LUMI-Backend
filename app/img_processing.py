@@ -164,21 +164,28 @@ def object_detection(image_file):
 
 def gemini_detection(image_file):
     """Detect objects in an image using the gemini 2.0 model"""
-
+    # Open the image using Pillow lib
     image = PIL.Image.open(image_file)
 
     if image is None:
         raise ValueError(
-            "Error decoding the image. UNsupported or invalid image format."
+            "Error decoding the image. Unsupported or invalid image format."
         )
+
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("API key is missing. Checking your .env file.")
+
+    # Send request to gemini 2.0 api endpoint
     client = genai.Client(api_key=api_key)
     prompt = "Just state the object name dont form any sentence"
     response = client.models.generate_content(
         model="gemini-2.0-flash",
         contents=[image, prompt],
     )
-    print(response.text)
-    return response.text
+
+    # Extract detected objects from the response
+    detected_objects = response.text
+    unique_detected_objects = list(detected_objects.split(" "))
+
+    return unique_detected_objects

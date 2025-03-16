@@ -3,8 +3,9 @@ from datetime import datetime
 from string import ascii_uppercase
 
 import pytz
-from flask import jsonify
-from flask_socketio import join_room, leave_room, send
+from flask import jsonify, session
+from flask_session import Session
+from flask_socketio import SocketIO, join_room, leave_room, send
 
 from app import mongo
 
@@ -13,7 +14,6 @@ messages_collection = mongo.db.messages
 
 
 def generate_unique_code(length):
-    """Function to generate random unique code for room codes"""
     while True:
         code = "".join(random.choice(ascii_uppercase) for _ in range(length))
         if not rooms_collection.find_one({"roomId": code}):
@@ -21,6 +21,7 @@ def generate_unique_code(length):
 
 
 def home(request):
+    session.clear()
     data = request.json
     name = data.get("name")
     code = data.get("code")
@@ -43,86 +44,12 @@ def home(request):
     elif not rooms_collection.find_one({"roomId": room}):
         return jsonify({"status": "error", "message": "Room does not exist"}), 400
 
+    session["room"] = room
+    session["name"] = name
+
     return (
         jsonify(
-            {
-                "status": "success",
-                "message": "You have joined the room successfully",
-                "roomId": room,
-                "name": name,
-            }
+            {"status": "success", "message": "You have joined the room successfully"}
         ),
         200,
     )
-
-
-def room(request):
-    data = request.json
-    name = data.get("name")
-    room = data.get("roomId")
-
-    if not room or not name:
-        return jsonify({"status": "error", "message": "Missing roomId or name"}), 400
-
-    room_data = messages_collection.find_one({"roomId": room})
-
-    if not room_data:
-        return jsonify({"status": "error", "message": "Room does not exist"}), 404
-
-    message_data = messages_collection.find_one({"roomId": room})
-    messages = message_data["messages"] if message_data else []
-
-    return jsonify({"status": "success", "messages": messages, "roomId": room}), 200
-
-
-def message(data):
-    room = data.get("roomId")
-    name = data.get("name")
-
-    if not room or not name:
-        return
-
-    utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
-    ist_time = utc_time.astimezone(pytz.timezone("Asia/Kolkata"))
-
-    content = {
-        "name": name,
-        "message": data["data"],
-        "timestamp": ist_time.strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    send(content, to=room)
-    messages_collection.update_one({"roomId": room}, {"$push": {"messages": content}})
-
-    print(f"{name} said {data['data']} at {content['timestamp']} ")
-
-
-def connect(auth):
-    room = auth.get("roomId")
-    name = auth.get("name")
-
-    if not room or not name:
-        return
-
-    join_room(room)
-    send({"name": name, "message": "has entered the room"}, to=room)
-    rooms_collection.update_one(
-        {"roomId": room}, {"$addToSet": {"members": name}, "$inc": {"activeMembers": 1}}
-    )
-    print(f"{name} joined room {room}")
-
-
-def disconnet(request):
-    data = request.args
-    room = data.get("roomId")
-    name = data.get("name")
-
-    if not room or not name:
-        return
-
-    leave_room(room)
-    rooms_collection.update_one(
-        {"roomId": room}, {"$pull": {"members": name}, "$inc": {"activeMembers": -1}}
-    )
-
-    send({"name": name, "message": "has left the room"}, to=room)
-    print(f"{name} has left the room {room}")
