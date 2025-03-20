@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app import app
 from app.auth import get_user_data, reset_password, sign_in_user, sign_up_user
+from app.chat import create_room, join_room_api
 from app.img_processing import (gemini_detection, object_detection,
                                 process_image, recognize_face,
                                 save_profile_picture)
@@ -538,5 +539,42 @@ def get_info():
                 "message": "Failed to get info. Please try again.",
                 "error": str(e),
             },
+            500,
+        )
+
+
+@app.route("/create-room", methods=["POST"])
+def create_room_route():
+    try:
+        response = create_room()
+        return response
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Failed to create Room. Please try again.",
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
+
+
+@app.route("/join-room", methods=["POST"])
+def join_room_route():
+    try:
+        # Call the function to delete the relationship
+        response = join_room_api(request)
+        return response
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": str(e),
+                    "error": str(e),
+                }
+            ),
             500,
         )

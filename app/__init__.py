@@ -22,7 +22,7 @@ app.config.from_object(Config)
 
 # Set up extensions
 bcrypt = Bcrypt(app)
-CORS(app)  # Enable CORS for all routes
+CORS(app, supports_credentials=True)  # Enable CORS for all routes
 mongo = PyMongo(app)
 jwt = JWTManager(app)
 
