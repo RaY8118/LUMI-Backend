@@ -44,16 +44,32 @@ def join_room_api(request):
     room = data.get("room")
     name = data.get("name")
 
+    if not room or not name:
+        return (
+            jsonify(
+                {"status": "error", "message": "Please provide proper name and room ID"}
+            ),
+            404,
+        )
+
     room_data = rooms_collection.find_one({"room": room})
     print(f"Room data : {room_data}")
     if not room_data:
         return jsonify({"status": "error", "message": "Room not found"}), 404
 
+    messages_data = messages_collection.find_one({"roomId": room})
+    messsages = messages_data["messages"] if messages_data else []
+
     session["room"] = room
     session["name"] = name
     print(f"Session data: {session}")
     return jsonify(
-        {"message": f"{name} joined room {room}", "room": room, "status": "success"}
+        {
+            "status": "success",
+            "message": f"{name} joined room {room}",
+            "room": room,
+            "messages": messsages,
+        }
     )
 
 
@@ -102,12 +118,18 @@ def handle_message(data):
     if not room_data:
         send({"status": "error", "message": "Room not found"}, to=sid)
         return
+    utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
+    ist_time = utc_time.astimezone(pytz.timezone("Asia/Kolkata"))
 
-    content = {"name": name, "message": message_content}
-    messages_collection.insert_one(
-        {"room": room, "name": name, "message": message_content}
-    )
+    content = {
+        "name": name,
+        "message": message_content,
+        "createdAt": ist_time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
     send(content, to=room)
+    messages_collection.update_one(
+        {"roomId": room}, {"$push": {"messages": content}}, upsert=True
+    )
     print(f"Message from {name} in room {room}: {message_content}")
 
 

@@ -1,0 +1,14 @@
+
+[tool.pylint.main]
+init-hook ="""
+try:
+  import pylint_venv
+except ImportError:
+  pass
+else:
+  pylint_venv.inithook()
+"""
+
+[tool.mypy]
+python_executable="./.venv/bin/python"
+
