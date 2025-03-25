@@ -78,7 +78,9 @@ def join_room_api(request):
     messages_data = messages_collection.find_one({"roomId": room})
     messsages = messages_data["messages"] if messages_data else []
 
-    session["user"] = caregiver_id if role == "caregiver" else patient_id
+    session["name"] = name
+    session["room"] = room
+    session["user"] = caregiver_id if role == "CG" else patient_id
     print(f"Session data: {session}")
     return jsonify(
         {
@@ -115,7 +117,6 @@ def connect():
 
     user_sessions[sid] = {"room": room, "name": name, "user": user}
     join_room(room)
-    send({"name": name, "message": f"{name} has joined the room"}, to=room)
     rooms_collection.update_one({"room": room}, {"$inc": {"members": 1}}, upsert=True)
     print(f"{name} joined room {room}")
 
@@ -166,10 +167,9 @@ def disconnect():
         updated_room = rooms_collection.find_one({"room": room})
 
         # # Delete the room if empty
-        if updated_room and updated_room["members"] <= 0:
-            print(f"Room deleted: {room}")
-            rooms_collection.delete_one({"room": room})
+        # if updated_room and updated_room["members"] <= 0:
+        #     print(f"Room deleted: {room}")
+        #     rooms_collection.delete_one({"room": room})
 
-        send({"name": name, "message": f"{name} has left the room"}, to=room)
         print(f"{name} has left the room {room}")
         del user_sessions[sid]
