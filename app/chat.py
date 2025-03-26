@@ -4,7 +4,7 @@ from string import ascii_uppercase
 
 import pytz
 from flask import jsonify, request, session
-from flask_socketio import SocketIO, join_room, leave_room, send
+from flask_socketio import SocketIO, close_room, join_room, leave_room, send
 
 from app import mongo, socketio
 
@@ -24,19 +24,18 @@ def generate_unique_code(length):
 
 
 # Create Room API
-def create_room():
-    try:
-        room_code = generate_unique_code(8)
-        print(
-            f"Generated room code: {room_code}"
-        )  # Add this line to check the generated code
-        rooms_collection.insert_one({"room": room_code, "members": 0})
-        return jsonify(
-            {"message": "Room created", "room": room_code, "status": "success"}
-        )
-    except Exception as e:
-        print(f"Error in create_room: {e}")  # Log the error to see it
-        raise e
+def create_room(request):
+    family_id = request.json
+    room_code = generate_unique_code(8)
+    print(f"Generated room code: {room_code}")
+    rooms_collection.insert_one({"room": room_code, "members": 0, "family": family_id})
+    return jsonify(
+        {
+            "message": f"Room created for family {family_id}",
+            "room": room_code,
+            "status": "success",
+        }
+    )
 
 
 # Join Room API
@@ -48,6 +47,7 @@ def join_room_api(request):
     caregiver_id = data.get("CGId")
     patient_id = data.get("PATId")
     role = data.get("role")
+    user_id = caregiver_id if role == "CG" else patient_id
 
     if not room or not name:
         return (
@@ -58,13 +58,12 @@ def join_room_api(request):
         )
 
     room_data = rooms_collection.find_one({"room": room})
-    print(f"Room data : {room_data}")
     if not room_data:
         return jsonify({"status": "error", "message": "Room not found"}), 404
 
-    caregiver = user_collection.find_one({"userId": caregiver_id})
-    patient = user_collection.find_one({"userId": patient_id})
-    if caregiver["family_id"] != patient["family_id"]:
+    user = user_collection.find_one({"userId": user_id})
+
+    if room_data["family"]["familyId"] != user["family_id"]:
         return (
             jsonify(
                 {
@@ -72,7 +71,7 @@ def join_room_api(request):
                     "message": "You don not have the permission to join this room",
                 }
             ),
-            400,
+            401,
         )
 
     messages_data = messages_collection.find_one({"roomId": room})
@@ -166,8 +165,9 @@ def disconnect():
         rooms_collection.update_one({"room": room}, {"$inc": {"members": -1}})
         updated_room = rooms_collection.find_one({"room": room})
 
-        # # Delete the room if empty
+        # Delete the room if empty
         # if updated_room and updated_room["members"] <= 0:
+        #     close_room(room)
         #     print(f"Room deleted: {room}")
         #     rooms_collection.delete_one({"room": room})
 

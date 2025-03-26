@@ -546,7 +546,7 @@ def get_info():
 @app.route("/create-room", methods=["POST"])
 def create_room_route():
     try:
-        response = create_room()
+        response = create_room(request)
         return response
     except Exception as e:
         return (
