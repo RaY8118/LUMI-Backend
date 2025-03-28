@@ -25,7 +25,30 @@ def generate_unique_code(length):
 
 # Create Room API
 def create_room(request):
-    family_id = request.json
+    data = request.json
+    family_id = data.get("familyId")
+    if not family_id:
+        return (
+            jsonify(
+                {"status": "error", "message": "Family ID or creator name missing"}
+            ),
+            400,
+        )
+
+    # Check if room for this family already exists
+    existing_room = rooms_collection.find_one({"family.familyId": family_id})
+    if existing_room:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Room already exists for this family.\nRoom Code: {existing_room['room']}",
+                    "room": existing_room["room"],
+                }
+            ),
+            400,
+        )
+
     room_code = generate_unique_code(8)
     print(f"Generated room code: {room_code}")
     rooms_collection.insert_one({"room": room_code, "members": 0, "family": family_id})
