@@ -4,6 +4,9 @@ Flask-Bcrypt
 Flask-Cors
 Flask-PyMongo
 Flask-JWT-Extended
+Flask-SocketIO
+Flask-Session
+Flask-APScheduler
 opencv-python
 cmake
 face-recognition
@@ -12,4 +15,5 @@ ultralytics
 torch
 torchvision
 pyrebase4
+gunicorn
 google-genai
