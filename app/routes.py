@@ -4,6 +4,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app import app
 from app.auth import get_user_data, reset_password, sign_in_user, sign_up_user
 from app.chat import create_room, join_room_api
+from app.chatbot import chatbot
 from app.img_processing import (gemini_detection, object_detection,
                                 process_image, recognize_face,
                                 save_profile_picture)
@@ -566,6 +567,24 @@ def join_room_route():
     try:
         # Call the function to delete the relationship
         response = join_room_api(request)
+        return response
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": str(e),
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
+
+
+@app.route("/chatbot", methods=["POST"])
+def chatbot_route():
+    try:
+        response = chatbot(request)
         return response
     except Exception as e:
         return (
