@@ -101,7 +101,7 @@ def sign_in_user(request):
             )
 
         access_token = create_access_token(
-            identity={"userId": user["userId"]}, expires_delta=timedelta(weeks=1)
+            identity=str(user["userId"]), expires_delta=timedelta(weeks=1)
         )
         return jsonify(
             {"status": "success", "message": "Login Successful", "token": access_token}

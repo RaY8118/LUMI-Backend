@@ -50,7 +50,6 @@ def create_room(request):
         )
 
     room_code = generate_unique_code(8)
-    print(f"Generated room code: {room_code}")
     rooms_collection.insert_one({"room": room_code, "members": 0, "family": family_id})
     return jsonify(
         {
@@ -64,7 +63,6 @@ def create_room(request):
 # Join Room API
 def join_room_api(request):
     data = request.json
-    print(data)
     room = data.get("room")
     name = data.get("name")
     caregiver_id = data.get("CGId")
@@ -103,7 +101,6 @@ def join_room_api(request):
     session["name"] = name
     session["room"] = room
     session["user"] = caregiver_id if role == "CG" else patient_id
-    print(f"Session data: {session}")
     return jsonify(
         {
             "status": "success",
@@ -140,7 +137,6 @@ def connect():
     user_sessions[sid] = {"room": room, "name": name, "user": user}
     join_room(room)
     rooms_collection.update_one({"room": room}, {"$inc": {"members": 1}}, upsert=True)
-    print(f"{name} joined room {room}")
 
 
 # Handle incoming messages
@@ -173,26 +169,27 @@ def handle_message(data):
     messages_collection.update_one(
         {"roomId": room}, {"$push": {"messages": content}}, upsert=True
     )
-    print(f"Message from {name} in room {room}: {message_content}")
 
 
 # Socket disconnection event
 @socketio.on("disconnect")
 def disconnect():
-    sid = request.sid
-    room = user_sessions.get(sid, {}).get("room")
-    name = user_sessions.get(sid, {}).get("name")
+    try:
+        sid = request.sid
+        room = user_sessions.get(sid, {}).get("room")
+        name = user_sessions.get(sid, {}).get("name")
 
-    if room:
-        leave_room(room)
-        rooms_collection.update_one({"room": room}, {"$inc": {"members": -1}})
-        updated_room = rooms_collection.find_one({"room": room})
+        if room:
+            leave_room(room)
+            rooms_collection.update_one({"room": room}, {"$inc": {"members": -1}})
+            updated_room = rooms_collection.find_one({"room": room})
 
-        # Delete the room if empty
-        # if updated_room and updated_room["members"] <= 0:
-        #     close_room(room)
-        #     print(f"Room deleted: {room}")
-        #     rooms_collection.delete_one({"room": room})
+            # Delete the room if empty
+            # if updated_room and updated_room["members"] <= 0:
+            #     close_room(room)
+            #     print(f"Room deleted: {room}")
+            #     rooms_collection.delete_one({"room": room})
 
-        print(f"{name} has left the room {room}")
-        del user_sessions[sid]
+            del user_sessions[sid]
+    except Exception as e:
+        print(f"Error during disconnect: {str(e)}")

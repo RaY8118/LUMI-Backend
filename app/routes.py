@@ -84,11 +84,10 @@ def password_reset_route():
 @app.route("/get-userdata", methods=["POST"])
 @jwt_required()  # Protect this route with JWT
 def protected():
-    current_user = get_jwt_identity()  # Get the current user's identity
-    user_id = current_user.get("userId")
+    current_user_id = get_jwt_identity()  # Get the current user's identity
 
-    if user_id:
-        user_data = get_user_data(user_id)
+    if current_user_id:
+        user_data = get_user_data(current_user_id)
 
         if user_data:
             return jsonify({"status": "success", "userData": user_data}), 200

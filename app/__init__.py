@@ -1,3 +1,4 @@
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -18,11 +19,16 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Initialize extensions
+# Set up logging
+app.logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
 
 # Set up extensions
 bcrypt = Bcrypt(app)
-CORS(app, supports_credentials=True)  # Enable CORS for all routes
+CORS(app, supports_credentials=True)
 mongo = PyMongo(app)
 jwt = JWTManager(app)
 
