@@ -26,6 +26,7 @@ from app.user import update_personal_info
 # Route for user registration
 @app.route("/sign-up", methods=["POST"])
 def sign_up_route():
+    """Route to sign up user"""
     try:
         response = sign_up_user(request)
         return response
@@ -45,6 +46,7 @@ def sign_up_route():
 # Route for user login
 @app.route("/sign-in", methods=["POST"])
 def sign_in_route():
+    """Route to sign in user"""
     try:
         response = sign_in_user(request)
         return response
@@ -64,6 +66,7 @@ def sign_in_route():
 # Route for reseting password
 @app.route("/reset-password", methods={"POST"})
 def password_reset_route():
+    """Route to reset password"""
     try:
         response = reset_password(request)
         return response
@@ -84,6 +87,7 @@ def password_reset_route():
 @app.route("/get-userdata", methods=["POST"])
 @jwt_required()  # Protect this route with JWT
 def protected():
+    """Route to fetch user data from user_id"""
     current_user_id = get_jwt_identity()  # Get the current user's identity
 
     if current_user_id:
@@ -91,15 +95,16 @@ def protected():
 
         if user_data:
             return jsonify({"status": "success", "userData": user_data}), 200
-        else:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-    else:
-        return jsonify({"status": "error", "message": "Invalid token data"}), 401
+
+        return jsonify({"status": "error", "message": "User not found"}), 404
+
+    return jsonify({"status": "error", "message": "Invalid token data"}), 401
 
 
 # Route for updating user Info
 @app.route("/update-info", methods=["PUT"])
 def updateinfo():
+    """Route to update personal info"""
     try:
         response = update_personal_info(request)
         return response
@@ -119,6 +124,7 @@ def updateinfo():
 # Route for patient to fetch reminders
 @app.route("/patient/reminders", methods=["GET"])
 def get_patient_reminders_route():
+    """Route to get patient's reminders"""
     try:
         return patient_get_reminders(request)
     except Exception as e:
@@ -139,6 +145,7 @@ def get_patient_reminders_route():
 
 @app.route("/caregiver/reminders", methods=["GET"])
 def get_caregiver_reminders_route():
+    """Route to get patient's reminders for caregiver"""
     try:
         return caregiver_get_reminders(request)
     except Exception as e:
@@ -157,6 +164,7 @@ def get_caregiver_reminders_route():
 # Route for patient to create reminders
 @app.route("/patient/reminders", methods=["POST"])
 def post_patient_reminders_route():
+    """Route to post reminder for patient"""
     try:
         response = patient_post_reminder(request)
         return response
@@ -176,6 +184,7 @@ def post_patient_reminders_route():
 # Route for caregiver to create reminders
 @app.route("/caregiver/reminders", methods=["POST"])
 def post_caregiver_reminders_route():
+    """Route to post reminders for patient by caregiver"""
     try:
         response = caregiver_post_reminder(request)
         return response
@@ -193,10 +202,9 @@ def post_caregiver_reminders_route():
 
 
 # Route for patient to delete reminders
-
-
 @app.route("/patient/reminders/<user_id>/<rem_id>", methods=["DELETE"])
 def delete_patient_reminder_route(user_id, rem_id):
+    """Route to delete patient's reminder"""
     try:
         return patient_delete_reminder(user_id, rem_id)
     except Exception as e:
@@ -213,12 +221,11 @@ def delete_patient_reminder_route(user_id, rem_id):
 
 
 # Route for caregiver to delete reminders
-
-
 @app.route(
     "/caregiver/reminders/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"]
 )
 def delete_caregiver_reminder_route(caregiver_id, patient_id, rem_id):
+    """Route to delete patient's reminder by caregiver"""
     try:
         return caregiver_delete_reminder(caregiver_id, patient_id, rem_id)
     except Exception as e:
@@ -237,6 +244,7 @@ def delete_caregiver_reminder_route(caregiver_id, patient_id, rem_id):
 # Route for patient to update reminders
 @app.route("/patient/reminders/<reminder_id>", methods=["PUT"])
 def update_patient_reminder_route(reminder_id):
+    """Route to update patient's reminder"""
     try:
         return patient_update_reminder(request, reminder_id)
     except Exception as e:
@@ -255,6 +263,7 @@ def update_patient_reminder_route(reminder_id):
 # Route for caregiver to delete reminders
 @app.route("/caregiver/reminders/<reminder_id>", methods=["PUT"])
 def update_caregiver_reminder_route(reminder_id):
+    """Route to update patient's reminder by caregiver"""
     try:
         return caregiver_update_reminder(request, reminder_id)
     except Exception as e:
@@ -273,36 +282,42 @@ def update_caregiver_reminder_route(reminder_id):
 # Route for saving home location
 @app.route("/safe-location", methods=["POST"])
 def save_home_location_route():
+    """Route to post safe location for patient"""
     return save_home_location(request)
 
 
 # Route for saving home location
 @app.route("/caregiver/safe-location", methods=["POST"])
 def save_patient_home_location_route():
+    """Route to post safe location for patient by caregiver"""
     return save_patient_home_location(request)
 
 
 # Route for getting home location
 @app.route("/safe-location", methods=["GET"])
 def get_home_location_route():
+    """Route to get safe location of patient"""
     return get_home_location(request)
 
 
 # Route for saving current location
 @app.route("/curr-location", methods=["POST"])
 def save_curr_location_route():
+    """Route to post current location of patient"""
     return save_current_location(request)
 
 
 # Route for getting home location
 @app.route("/curr-location", methods=["GET"])
 def get_curr_location_route():
+    """Route to get current location of patient"""
     return get_current_location(request)
 
 
 # Route to create new family
 @app.route("/family", methods=["POST"])
 def create_family_route():
+    """Route to create family by caregiver"""
     try:
         # Call the function to delete the relationship
         response = create_family(request)
@@ -320,9 +335,10 @@ def create_family_route():
         )
 
 
-# Route to add user to family
+# Route to add memmber to family
 @app.route("/family/add_user", methods=["POST"])
 def add_user_to_family_route():
+    """Route to add members in the family by caregiver"""
     try:
         # Call the add_user_to_family function
         response = add_user_to_family(request)
@@ -340,9 +356,10 @@ def add_user_to_family_route():
         )
 
 
-# Route to add user to family
+# Route to add patientto family
 @app.route("/family/add_patient", methods=["POST"])
 def add_patient_to_family_route():
+    """Route to add patient in family by caregiver"""
     try:
         # Call the add_user_to_family function
         response = add_patient_to_family(request)
@@ -423,6 +440,7 @@ def detect_faces_route(family_id):
 # Route for object detection in images
 @app.route("/obj-detection", methods=["POST"])
 def obj_detection_route():
+    """Route for YOLO object detection"""
     if "image" not in request.files:
         # Check if the image is in the request
         return jsonify({"status": "error", "message": "No image provided"}), 400
@@ -447,6 +465,7 @@ def obj_detection_route():
 
 @app.route("/gemini-detection", methods=["POST"])
 def gemini_detection_route():
+    """Route for gemini object detection"""
     if "image" not in request.files:
         # Check if the image is in the request
         return jsonify({"status": "error", "message": "No image provided"}), 400
@@ -471,12 +490,14 @@ def gemini_detection_route():
 
 @app.route("/store-token", methods=["POST"])
 def store_token():
+    """Route to store expo token"""
     data = request.get_json()
     return store_user_token(data)
 
 
 @app.route("/send-push-notification", methods=["POST"])
 def send_push_notification():
+    """Route to send custom notification by caregiver to patient"""
     try:
         response = custom_push_notification(request)
         return response
@@ -495,6 +516,7 @@ def send_push_notification():
 
 @app.route("/get-user-token", methods=["GET"])
 def get_token():
+    """Route to get user's expo token"""
     try:
         response = get_user_token(request)
         return response
@@ -513,6 +535,7 @@ def get_token():
 
 @app.route("/save-additional-info", methods=["POST"])
 def save_info():
+    """Route to save additional info for face recognition"""
     try:
         response = save_additional_info(request)
         return response
@@ -529,6 +552,7 @@ def save_info():
 
 @app.route("/get-additional-info", methods=["GET"])
 def get_info():
+    "Route to get additional info for face recognition"
     try:
         response = get_additional_info(request)
         return response
@@ -545,8 +569,9 @@ def get_info():
 
 @app.route("/create-room", methods=["POST"])
 def create_room_route():
+    """Route to create socket room"""
     try:
-        response = create_room(request)
+        response = create_room()
         return response
     except Exception as e:
         return (
@@ -563,9 +588,10 @@ def create_room_route():
 
 @app.route("/join-room", methods=["POST"])
 def join_room_route():
+    """Route to join socket room"""
     try:
         # Call the function to delete the relationship
-        response = join_room_api(request)
+        response = join_room_api()
         return response
     except Exception as e:
         return (
@@ -582,6 +608,7 @@ def join_room_route():
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot_route():
+    """Route to chat with chatbot"""
     try:
         response = chatbot(request)
         return response
