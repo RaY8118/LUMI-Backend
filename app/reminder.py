@@ -1,6 +1,8 @@
+import json
 import uuid
 
 from flask import jsonify
+from werkzeug.exceptions import BadRequest
 
 from app import mongo
 
@@ -19,7 +21,7 @@ def get_json_data(request):
     """Function to safely extract JSON data from the request."""
     try:
         return request.json
-    except Exception:
+    except (BadRequest, json.JSONDecodeError):
         return None
 
 
