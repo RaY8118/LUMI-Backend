@@ -9,11 +9,12 @@ Flask-Session
 Flask-APScheduler
 opencv-python
 cmake
+dlib
 face-recognition
 geopy
 ultralytics
-torch
-torchvision
+torch @ https://download.pytorch.org/whl/nightly/cpu/torch-2.8.0.dev20250405%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl
+torchvision @ https://download.pytorch.org/whl/nightly/cpu/torchvision-0.22.0.dev20250405%2Bcpu-cp310-cp310-linux_x86_64.whl
 pyrebase4
 gunicorn
 google-genai

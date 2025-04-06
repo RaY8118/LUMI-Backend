@@ -1,10 +1,13 @@
 import os
 
-from flask import jsonify
+from flask import Blueprint, jsonify, request
 from google import genai
 
+chatbot_bp = Blueprint("chatbot", __name__)
 
-def chatbot(request):
+
+@chatbot_bp.route("/chatbot", methods=["POST"])
+def chatbot():
     try:
         data = request.json
         user_message = data.get("message", "").strip()
@@ -27,5 +30,9 @@ def chatbot(request):
         reply = response.text if response.text else "I couldn't understand that"
 
         return jsonify({"status": "success", "reply": reply}), 200
-    except Exception as e:
-        return jsonify({"error": str(e), "reply": "An eror occured"})
+    except ValueError as e:
+        print(f"Value Error: {str(e)}")
+        return jsonify({"status": "error", "message": "An error occurred"}), 400
+    except KeyError as e:
+        print(f"Key Error: {str(e)}")
+        return jsonify({"status": "error", "message": "Missing expected key"}), 400

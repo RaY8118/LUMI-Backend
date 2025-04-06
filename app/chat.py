@@ -3,13 +3,14 @@ from datetime import datetime
 from string import ascii_uppercase
 
 import pytz
-from flask import jsonify, request, session
+from flask import Blueprint, jsonify, request, session
 from flask_socketio import close_room, join_room, leave_room, send
 from pymongo.errors import PyMongoError
 from werkzeug.exceptions import BadRequest
 
 from app import mongo, socketio
 
+chat_bp = Blueprint("chat", __name__)
 rooms_collection = mongo.db.rooms
 messages_collection = mongo.db.messages
 user_collection = mongo.db.users
@@ -27,6 +28,7 @@ def generate_unique_code(length):
 
 
 # Create Room API
+@chat_bp.route("/create-room", methods=["POST"])
 def create_room():
     """Function to create socket rooms"""
     try:
@@ -41,7 +43,7 @@ def create_room():
             )
 
         # Check if room for this family already exists
-        existing_room = rooms_collection.find_one({"family.familyId": family_id})
+        existing_room = rooms_collection.find_one({"family": family_id})
         if existing_room:
             return (
                 jsonify(
@@ -88,6 +90,7 @@ def create_room():
 
 
 # Join Room API
+@chat_bp.route("/join-room", methods=["POST"])
 def join_room_api():
     """Function to join room using name and roomId"""
     try:

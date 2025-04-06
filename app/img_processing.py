@@ -5,7 +5,9 @@ import cv2
 import face_recognition
 import numpy as np
 import PIL.Image
-from flask import current_app as app
+from flask import Blueprint
+from flask import current_app as App
+from flask import jsonify, request
 from google import genai
 from google.genai import types
 from ultralytics import YOLO
@@ -13,6 +15,7 @@ from ultralytics import YOLO
 from app import mongo
 
 # Load the YOLO model
+image_bp = Blueprint("image", __name__)
 model = YOLO("model/yolov10b.pt")
 user_collection = mongo.db.users
 info_collection = mongo.db.infomation
@@ -86,7 +89,7 @@ def process_image(image_file):
 def save_profile_picture(user_id, family_id, image_file):
     """Save the user's profile picture and generate face encodings for the family"""
     # Define the directory for storing family images
-    family_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(family_id))
+    family_folder = os.path.join(App.config["UPLOAD_FOLDER"], str(family_id))
 
     # Create the family folder if it doesn't exists
     if not os.path.exists(family_folder):
@@ -138,54 +141,93 @@ def save_profile_picture(user_id, family_id, image_file):
         print(f"No face found in the profile picture for user {user_id}.")
 
 
-def object_detection(image_file):
+@image_bp.route("/obj-detection", methods=["POST"])
+def object_detection():
     """Detect objects in an image using the YOLO model and return their names."""
     # Convert the image file (bytes) to a NumPy array
-    image_bytes = np.frombuffer(image_file.read(), np.uint8)
+    try:
+        if "image" not in request.files:
+            # Check if the image is in the request
+            return jsonify({"status": "error", "message": "No image provided"}), 400
 
-    # Decode image from bytes using OpenCV
-    image = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
+        image_file = request.files["image"]
+        image_bytes = np.frombuffer(image_file.read(), np.uint8)
 
-    # Check if image was properly decoded
-    if image is None:
-        raise ValueError(
-            "Error decoding the image. Unsupported or invalid image format."
+        # Decode image from bytes using OpenCV
+        image = cv2.imdecode(image_bytes, cv2.IMREAD_COLOR)
+
+        # Check if image was properly decoded
+        if image is None:
+            raise ValueError(
+                "Error decoding the image. Unsupported or invalid image format."
+            )
+
+        # Predict objects in the image using YOLO
+        results = model.predict(image)
+
+        # Extract detected objects' names
+        detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
+        unique_detected_objects = list(set(detected_objects))
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Identified successfully",
+                    "name": unique_detected_objects,
+                }
+            ),
+            200,
         )
 
-    # Predict objects in the image using YOLO
-    results = model.predict(image)
-
-    # Extract detected objects' names
-    detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
-    unique_detected_objects = list(set(detected_objects))
-
-    return unique_detected_objects
+    except ValueError as e:
+        # Return error response if something goes wrong
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 
-def gemini_detection(image_file):
+@image_bp.route("/gemini-detection", methods=["POST"])
+def gemini_detection():
     """Detect objects in an image using the gemini 2.0 model"""
     # Open the image using Pillow lib
-    image = PIL.Image.open(image_file)
+    try:
+        if "image" not in request.files:
+            # Check if the image is in the request
+            return jsonify({"status": "error", "message": "No image provided"}), 400
 
-    if image is None:
-        raise ValueError(
-            "Error decoding the image. Unsupported or invalid image format."
+        image_file = request.files["image"]
+        image = PIL.Image.open(image_file)
+
+        if image is None:
+            raise ValueError(
+                "Error decoding the image. Unsupported or invalid image format."
+            )
+
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("API key is missing. Checking your .env file.")
+
+        # Send request to gemini 2.0 api endpoint
+        client = genai.Client(api_key=api_key)
+        prompt = "Just state the object name dont form any sentence"
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[image, prompt],
         )
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("API key is missing. Checking your .env file.")
+        # Extract detected objects from the response
+        detected_objects = response.text
+        unique_detected_objects = list(detected_objects.split(" "))
 
-    # Send request to gemini 2.0 api endpoint
-    client = genai.Client(api_key=api_key)
-    prompt = "Just state the object name dont form any sentence"
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[image, prompt],
-    )
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Identified successfully",
+                    "name": unique_detected_objects,
+                }
+            ),
+            200,
+        )
 
-    # Extract detected objects from the response
-    detected_objects = response.text
-    unique_detected_objects = list(detected_objects.split(" "))
-
-    return unique_detected_objects
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
