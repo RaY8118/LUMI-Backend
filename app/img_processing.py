@@ -86,59 +86,142 @@ def process_image(image_file):
     return face_locations, face_encodings, new_image
 
 
-def save_profile_picture(user_id, family_id, image_file):
-    """Save the user's profile picture and generate face encodings for the family"""
-    # Define the directory for storing family images
-    family_folder = os.path.join(App.config["UPLOAD_FOLDER"], str(family_id))
+@image_bp.route("/detect_faces/<family_id>", methods=["POST"])
+def detect_faces_route(family_id):
+    """Detect faces in the uploaded image and recognize them."""
+    try:
+        image_file = request.files["image"]
+        face_locations, face_encodings, new_image = process_image(image_file)
 
-    # Create the family folder if it doesn't exists
-    if not os.path.exists(family_folder):
-        os.makedirs(family_folder)
+        if not image_file:
+            return jsonify({"status": "error", "message": "No image provided."}), 400
+        if not face_encodings:  # If no faces were found
+            return jsonify({"status": "success", "message": "No faces found."}), 200
 
-    # Define the path where the profile picture will be saved
-    file_path = os.path.join(family_folder, f"{user_id}.jpg")
+        # Recognize each face
+        recognized_faces = []
+        for face_encoding in face_encodings:
+            recognized_name = recognize_face(face_encoding, family_id)
+            recognized_faces.append(recognized_name)
+            print(recognized_faces)
 
-    # Save the uploaded profile picture
-    with open(file_path, "wb") as f:
-        f.write(image_file.read())
-
-    # Adjust based on your server setup
-    user_collection.update_one(
-        {"userId": user_id}, {"$set": {"profile_image": file_path}}
-    )
-    print(file_path)
-    # Load the image and extract face encodings
-    img = cv2.imread(file_path)
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # Find the face emcodings for the uploaded image
-    encodings = face_recognition.face_encodings(img_rgb)
-
-    if encodings:
-        # If encodings aare found, save them in the family specific pickle file
-        family_pickle_file = os.path.join(
-            "resources", f"family_{family_id}_encodefile.p"
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Identified person",
+                    "name": recognized_faces,
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "An error occured while identifying the person",
+                    "error": str(e),
+                }
+            ),
+            500,
         )
 
-        try:
-            # Load existing encodings if the file exists
-            with open(family_pickle_file, "rb") as f:
-                known_encodings, known_ids = pickle.load(f)
-        except FileNotFoundError:
-            known_encodings, known_ids = [], []
 
-        # Append the new encodings and user ID to the lists
-        known_encodings.append(encodings[0])
-        known_ids.append(user_id)
+@image_bp.route("/save_profile_picture/<user_id>/<family_id>", methods=["POST"])
+def save_profile_picture(user_id, family_id):
+    """Save the user's profile picture and generate face encodings for the family"""
+    # Define the directory for storing family images
+    try:
+        if "image" not in request.files:
+            return (
+                jsonify({"status": "error", "message": "No image file provided"}),
+                400,
+            )
+        image_file = request.files["image"]
 
-        # Save the updated encodings and IDs back to the family pickle file
-        with open(family_pickle_file, "wb") as f:
-            pickle.dump([known_encodings, known_ids], f)
+        family_folder = os.path.join(App.config["UPLOAD_FOLDER"], str(family_id))
 
-        print(f"Profile picture saved for user {user_id} in family {family_id}.")
+        # Create the family folder if it doesn't exists
+        if not os.path.exists(family_folder):
+            os.makedirs(family_folder)
 
-    else:
-        print(f"No face found in the profile picture for user {user_id}.")
+        # Define the path where the profile picture will be saved
+        file_path = os.path.join(family_folder, f"{user_id}.jpg")
+
+        # Save the uploaded profile picture
+        with open(file_path, "wb") as f:
+            f.write(image_file.read())
+
+        # Adjust based on your server setup
+        user_collection.update_one(
+            {"userId": user_id}, {"$set": {"profile_image": file_path}}
+        )
+        print(file_path)
+        # Load the image and extract face encodings
+        img = cv2.imread(file_path)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Find the face emcodings for the uploaded image
+        encodings = face_recognition.face_encodings(img_rgb)
+
+        if encodings:
+            # If encodings aare found, save them in the family specific pickle file
+            family_pickle_file = os.path.join(
+                "resources", f"family_{family_id}_encodefile.p"
+            )
+
+            try:
+                # Load existing encodings if the file exists
+                with open(family_pickle_file, "rb") as f:
+                    known_encodings, known_ids = pickle.load(f)
+            except FileNotFoundError:
+                known_encodings, known_ids = [], []
+
+            # Append the new encodings and user ID to the lists
+            known_encodings.append(encodings[0])
+            known_ids.append(user_id)
+
+            # Save the updated encodings and IDs back to the family pickle file
+            with open(family_pickle_file, "wb") as f:
+                pickle.dump([known_encodings, known_ids], f)
+
+            print(f"Profile picture saved for user {user_id} in family {family_id}.")
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Profile picture for user {user_id} saved in family {family_id}.",
+                    }
+                ),
+                200,
+            )
+
+        else:
+            print(f"No face found in the profile picture for user {user_id}.")
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"No face found in the profile picture for user {user_id}.",
+                    }
+                ),
+                200,
+            )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "An error occured while saving the profile picture",
+                    "error": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @image_bp.route("/obj-detection", methods=["POST"])
