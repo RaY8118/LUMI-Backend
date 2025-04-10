@@ -1,15 +1,18 @@
 import uuid
 
-from flask import jsonify
+from flask import Blueprint, jsonify, request
 
 from app import mongo
+
+family_bp = Blueprint("family", __name__)
 
 user_collection = mongo.db.users
 families_collection = mongo.db.families
 info_collection = mongo.db.info
 
 
-def create_family(request):
+@family_bp.route("/", methods=["POST"])
+def create_family():
     """Function to create family Id"""
     data = request.json
     caregiver_id = data.get("caregiverId")
@@ -29,13 +32,13 @@ def create_family(request):
 
     # Check if the caregiver already has a family
     existing_family = families_collection.find_one({"members": caregiver_id})
+    print(existing_family["family_id"])
     if existing_family:
         return (
             jsonify(
                 {
                     "status": "error",
-                    "message": "Caregiver already belong to a family",
-                    "familyId": existing_family["family_id"],
+                    "message": f"Caregiver already belong to a family.\nFamily Id: {existing_family['family_id']}",
                 }
             ),
             400,
@@ -72,7 +75,8 @@ def create_family(request):
         return jsonify({"status": "error", "message": "Failed to create family"}), 500
 
 
-def add_user_to_family(request):
+@family_bp.route("/add_user", methods=["POST"])
+def add_user_to_family():
     """Function to add members in family"""
     data = request.json
     user_id = data.get("userId")
@@ -134,7 +138,8 @@ def add_user_to_family(request):
         )
 
 
-def add_patient_to_family(request):
+@family_bp.route("/add_patient", methods=["POST"])
+def add_patient_to_family():
     """Function to add patient in the family"""
     data = request.json
     user_id = data.get("userId")
@@ -193,7 +198,8 @@ def add_patient_to_family(request):
         )
 
 
-def save_additional_info(request):
+@family_bp.route("/save-additional-info", methods=["POST"])
+def save_additional_info():
     """Function to add additional info for face recognition"""
     data = request.json
     user_id = data.get("userId")
@@ -243,7 +249,8 @@ def save_additional_info(request):
         )
 
 
-def get_additional_info(request):
+@family_bp.route("/get-additional-info", methods=["GET"])
+def get_additional_info():
     """Function to get additional info when face recognition"""
     user_id = request.args.get("userId")
 

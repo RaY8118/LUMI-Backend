@@ -19,18 +19,12 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Set up logging
-app.logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-
 # Set up extensions
 bcrypt = Bcrypt(app)
 CORS(app, supports_credentials=True)
 mongo = PyMongo(app)
 jwt = JWTManager(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 app.config["SESSION_TYPE"] = "mongodb"
 app.config["SESSION_MONGODB"] = mongo.cx
@@ -38,11 +32,31 @@ app.config["SESSION_MONGODB_DB"] = "chat_app"
 app.config["SESSION_MONGODB_COLLECT"] = "sessions"
 app.config["SESSION_PERMANENT"] = False
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Set up logging
+app.logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+
+from app.auth import auth_bp
+from app.chat import chat_bp
+from app.chatbot import chatbot_bp
+from app.img_processing import image_bp
+from app.location import location_bp
+from app.notifications import notification_bp
+from app.relations import family_bp
+from app.reminder import reminder_bp
+
+app.register_blueprint(auth_bp, url_prefix="/v1/auth")
+app.register_blueprint(reminder_bp, url_prefix="/v1/reminders")
+app.register_blueprint(family_bp, url_prefix="/v1/family")
+app.register_blueprint(notification_bp, url_prefix="/v1/notifications")
+app.register_blueprint(location_bp, url_prefix="/v1/location")
+app.register_blueprint(chat_bp, url_prefix="/v1/chatroom")
+app.register_blueprint(chatbot_bp, url_prefix="/v1/assistant")
+app.register_blueprint(image_bp, url_prefix="/v1/vision")
 
 # Ensure the upload folder exists
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
     os.makedirs(app.config["UPLOAD_FOLDER"])
-
-# Import routes
-from app import routes

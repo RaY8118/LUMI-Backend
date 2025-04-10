@@ -1,18 +1,20 @@
 import requests
-from flask import jsonify
+from flask import Blueprint, jsonify, request
 from flask_apscheduler import APScheduler
 
 from app import mongo
 
+notification_bp = Blueprint("notifications", __name__)
 reminders_collection = mongo.db.reminders
 user_collection = mongo.db.users
 tokens_collection = mongo.db.tokens
 scheduler = APScheduler()
 
 
-def custom_push_notification(request):
+@notification_bp.route("/send-push-notification", methods=["POST"])
+def custom_push_notification():
     """Function to send custom expo notifications directly to the patients"""
-    data = request.get_json()
+    data = request.json
     patient_id = data.get("PATId")
     message = data.get("message")
 
@@ -41,8 +43,10 @@ def custom_push_notification(request):
         return jsonify({"error": str(e)}), 500
 
 
-def store_user_token(data):
+@notification_bp.route("/store-token", methods=["POST"])
+def store_user_token():
     """Function to handle storing user tokens."""
+    data = request.json
     token = data.get("token")
     user_id = data.get("userId")
 
@@ -57,7 +61,8 @@ def store_user_token(data):
     return jsonify({"status": "success", "message": "Token stored successfully"}), 200
 
 
-def get_user_token(request):
+@notification_bp.route("/get-user-token", methods=["GET"])
+def get_user_token():
     """Function to get stored token"""
     user_id = request.args.get("userId")
     if not user_id:
