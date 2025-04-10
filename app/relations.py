@@ -11,7 +11,7 @@ families_collection = mongo.db.families
 info_collection = mongo.db.info
 
 
-@family_bp.route("/family", methods=["POST"])
+@family_bp.route("/", methods=["POST"])
 def create_family():
     """Function to create family Id"""
     data = request.json
@@ -32,13 +32,13 @@ def create_family():
 
     # Check if the caregiver already has a family
     existing_family = families_collection.find_one({"members": caregiver_id})
+    print(existing_family["family_id"])
     if existing_family:
         return (
             jsonify(
                 {
                     "status": "error",
-                    "message": "Caregiver already belong to a family",
-                    "familyId": existing_family["family_id"],
+                    "message": f"Caregiver already belong to a family.\nFamily Id: {existing_family['family_id']}",
                 }
             ),
             400,
@@ -75,7 +75,7 @@ def create_family():
         return jsonify({"status": "error", "message": "Failed to create family"}), 500
 
 
-@family_bp.route("/family/add_user", methods=["POST"])
+@family_bp.route("/add_user", methods=["POST"])
 def add_user_to_family():
     """Function to add members in family"""
     data = request.json
@@ -138,7 +138,7 @@ def add_user_to_family():
         )
 
 
-@family_bp.route("/family/add_patient", methods=["POST"])
+@family_bp.route("/add_patient", methods=["POST"])
 def add_patient_to_family():
     """Function to add patient in the family"""
     data = request.json

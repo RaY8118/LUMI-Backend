@@ -6,7 +6,7 @@ from google import genai
 chatbot_bp = Blueprint("chatbot", __name__)
 
 
-@chatbot_bp.route("/chatbot", methods=["POST"])
+@chatbot_bp.route("/", methods=["POST"])
 def chatbot():
     try:
         data = request.json

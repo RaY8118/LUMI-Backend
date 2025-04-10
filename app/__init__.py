@@ -48,14 +48,14 @@ from app.notifications import notification_bp
 from app.relations import family_bp
 from app.reminder import reminder_bp
 
-app.register_blueprint(auth_bp, url_prefix="/auth")
-app.register_blueprint(reminder_bp, url_prefix="/reminder")
-app.register_blueprint(family_bp, url_prefix="/family")
-app.register_blueprint(notification_bp, url_prefix="/notifications")
-app.register_blueprint(location_bp, url_prefix="/location")
-app.register_blueprint(chat_bp, url_prefix="/chat")
-app.register_blueprint(chatbot_bp, url_prefix="/chatbot")
-app.register_blueprint(image_bp, url_prefix="/image")
+app.register_blueprint(auth_bp, url_prefix="/v1/auth")
+app.register_blueprint(reminder_bp, url_prefix="/v1/reminders")
+app.register_blueprint(family_bp, url_prefix="/v1/family")
+app.register_blueprint(notification_bp, url_prefix="/v1/notifications")
+app.register_blueprint(location_bp, url_prefix="/v1/location")
+app.register_blueprint(chat_bp, url_prefix="/v1/chatroom")
+app.register_blueprint(chatbot_bp, url_prefix="/v1/assistant")
+app.register_blueprint(image_bp, url_prefix="/v1/vision")
 
 # Ensure the upload folder exists
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):

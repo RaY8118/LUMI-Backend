@@ -9,7 +9,7 @@ user_collection = mongo.db.users
 location_bp = Blueprint("location", __name__)
 
 
-@location_bp.route("/safe-location", methods=["POST"])
+@location_bp.route("/patient/safe-location", methods=["POST"])
 def save_home_location():
     """Save or update the user's home location in the database."""
     data = request.json  # Get JSON data from the request
@@ -117,7 +117,7 @@ def save_patient_home_location():
     )
 
 
-@location_bp.route("/safe-location", methods=["GET"])
+@location_bp.route("/patient/safe-location", methods=["GET"])
 def get_home_location():
     """Function to get home location of patient"""
     try:
@@ -177,7 +177,7 @@ def get_home_location():
         )
 
 
-@location_bp.route("/curr-location", methods=["POST"])
+@location_bp.route("/caregiver/curr-location", methods=["POST"])
 def save_current_location():
     """Save and update user's current location in the database"""
     data = request.json
@@ -221,7 +221,7 @@ def save_current_location():
     )
 
 
-@location_bp.route("/curr-location", methods=["GET"])
+@location_bp.route("/caregiver/curr-location", methods=["GET"])
 def get_current_location():
     """Get patient's current location from the database"""
     caregiver_id = request.args.get("CGId")

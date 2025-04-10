@@ -150,7 +150,7 @@ def delete_reminder(reminder_id):
     )
 
 
-@reminder_bp.route("/patient/reminders", methods=["GET"])
+@reminder_bp.route("/patient", methods=["GET"])
 def patient_get_reminders():
     """Retrieve reminders for a specific patient."""
     try:
@@ -177,7 +177,7 @@ def patient_get_reminders():
         )
 
 
-@reminder_bp.route("/caregiver/reminders", methods=["GET"])
+@reminder_bp.route("/caregiver", methods=["GET"])
 def caregiver_get_reminders():
     """Retrieve reminders for a caregiver's patient."""
     try:
@@ -229,7 +229,7 @@ def caregiver_get_reminders():
         )
 
 
-@reminder_bp.route("/patient/reminders", methods=["POST"])
+@reminder_bp.route("/patient", methods=["POST"])
 def patient_post_reminder():
     """Create a new reminder for a patient based on the request data."""
     try:
@@ -267,7 +267,7 @@ def patient_post_reminder():
         )
 
 
-@reminder_bp.route("/caregiver/reminders", methods=["POST"])
+@reminder_bp.route("/caregiver", methods=["POST"])
 def caregiver_post_reminder():
     """Create a new reminder for a patient based on the request data."""
     try:
@@ -329,7 +329,7 @@ def caregiver_post_reminder():
         )
 
 
-@reminder_bp.route("/patient/reminders/<reminder_id>", methods=["PUT"])
+@reminder_bp.route("/patient/<reminder_id>", methods=["PUT"])
 def patient_update_reminder(reminder_id):
     """Allow a patient to update their own reminder."""
     try:
@@ -376,7 +376,7 @@ def patient_update_reminder(reminder_id):
         return jsonify({"status": "error", "message": str(e)}), 400
 
 
-@reminder_bp.route("/caregiver/reminders/<reminder_id>", methods=["PUT"])
+@reminder_bp.route("/caregiver/<reminder_id>", methods=["PUT"])
 def caregiver_update_reminder(reminder_id):
     """Allow a caregiver to update a reminder for a patient."""
     try:
@@ -448,7 +448,7 @@ def caregiver_update_reminder(reminder_id):
         return jsonify({"status": "error", "message": str(e)}), 400
 
 
-@reminder_bp.route("/patient/reminders/<user_id>/<rem_id>", methods=["DELETE"])
+@reminder_bp.route("/patient/<user_id>/<rem_id>", methods=["DELETE"])
 def patient_delete_reminder(user_id, rem_id):
     """Allow a patient to delete their own reminder."""
     try:
@@ -488,7 +488,7 @@ def patient_delete_reminder(user_id, rem_id):
 
 
 @reminder_bp.route(
-    "/caregiver/reminders/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"]
+    "/caregiver/<caregiver_id>/<patient_id>/<rem_id>", methods=["DELETE"]
 )
 def caregiver_delete_reminder(caregiver_id, patient_id, rem_id):
     """Allow a caregiver to delete a reminder for a patient."""
