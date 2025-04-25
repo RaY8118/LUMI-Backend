@@ -17,19 +17,39 @@ def chatbot():
                 jsonify({"status": "error", "message": "Please enter a message"}),
                 400,
             )
+
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("API key is missing. Checking your .env file.")
 
         client = genai.Client(api_key=api_key)
-        prompt = "Don't use text styling keep the text plain and concise"
+
+        context_message = {
+            "role": "user",
+            "parts": [
+                {
+                    "text": (
+                        "You are a helpful and friendly assistant designed to support elderly people with Alzheimer's. "
+                        "Your responses should be simple, clear, and comforting. Be patient and empathetic in tone."
+                    )
+                }
+            ],
+        }
+
+        user_prompt = {"role": "user", "parts": [{"text": user_message}]}
+
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=[user_message, prompt],
+            model="gemini-2.0-flash", contents=[context_message, user_prompt]
         )
-        reply = response.text if response.text else "I couldn't understand that"
+
+        reply = (
+            response.text
+            if response.text
+            else "I'm here to help, but I didn’t understand that."
+        )
 
         return jsonify({"status": "success", "reply": reply}), 200
+
     except ValueError as e:
         print(f"Value Error: {str(e)}")
         return jsonify({"status": "error", "message": "An error occurred"}), 400
