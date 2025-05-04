@@ -1,95 +1,145 @@
 # 🧠 Lumi Alzheimer's and Elderly Care App - Backend (Flask API)
 
-This repository contains the backend code for the **Alzheimer's and elderly care application** 🧓👵, which provides **API endpoints** for various features like reminders, face recognition, object detection, and location tracking. The backend is built using **Flask** and integrates with **MongoDB** for data storage.
+This repository contains the **backend code** for the **LUMI Alzheimer's and Elderly Care App** 🧓👵. The backend powers all the core features such as **reminders**, **face recognition**, **object detection**, **location tracking**, **real-time chat**, and **AI chatbot support**. It is built using **Flask** and integrates with **MongoDB**, **WebSocket**, and **AI models** for intelligent support.
+
+---
 
 ## ✨ Features
 
-### 1. 📝 **Reminders API**
-   - 📌 Endpoints for creating, updating, retrieving, and deleting reminders.
-   - ⚠️ Reminders are tagged as urgent or important based on user input.
+### 1. 📝 Reminders API
+- 📌 Create, update, retrieve, and delete reminders.
+- ⚠️ Tag reminders as *urgent* or *important*.
+- 🔔 Notifications triggered for scheduled reminders.
 
-### 2. 📸 **Face Recognition API**
-   - 👤 Built using the `face_recognition` Python library to help identify familiar faces.
-   - 📥 Processes images and returns the recognition results via the API.
+### 2. 📸 Face Recognition API
+- 👤 Identifies familiar faces using the `face_recognition` Python library.
+- 📥 Accepts image input and returns recognition results.
 
-### 3. 🔍 **Object Detection API**
-   - 🤖 Powered by a YOLO (You Only Look Once) model for object detection.
-   - 🏷️ Identifies and labels objects from images provided by the user.
+### 3. 🔍 Object Detection API
+- 🤖 Detects common household or personal objects using YOLO.
+- 🏷️ Returns labels for detected objects from uploaded images.
 
-### 4. 🌍 **Location Tracking API**
-   - 📍 Provides endpoints to track and update the user's location, which can be shared with caregivers.
+### 4. 🌍 Location Tracking API
+- 📍 Tracks and stores users’ live location updates.
+- 🧭 Allows caregivers to monitor patient movements and receive alerts.
+
+### 5. 💬 Real-time Chatroom (Flask-SocketIO)
+- 🧑‍🤝‍🧑 Enables communication between caregivers and patients.
+- 🔐 Secured using unique userID-based authentication and rooms.
+- 📨 Integrated with Expo push notifications for urgent messages.
+
+### 6. 🤖 Chatbot Support
+- 🧠 Provides a built-in assistant to help elderly users perform tasks or answer questions.
+- 🗣️ Accessible via the chat interface to enhance user experience.
+
+---
 
 ## ⚙️ Technology Stack
 
-- 🚀 **Flask**: Web framework for creating the RESTful API.
-- 🗄️ **MongoDB**: Database for storing user data, reminders, and other information.
-- 🧑‍🤝‍🧑 **face_recognition**: Python library used for implementing face recognition features.
-- 📷 **YOLO Model**: Used for object detection, recognizing multiple objects in images.
+- 🔙 **Flask** — REST API and Socket.IO support
+- 🧠 **face_recognition** — Face detection and recognition
+- 🕵️ **YOLO** — Object detection
+- 📦 **MongoDB** — NoSQL database
+- 🌐 **Flask-SocketIO** — Real-time bi-directional chat
+- ✨ **Gemini / Custom AI model** — For chatbot capabilities
+- 🔐 **Expo Push Notifications** — For caregiver alerts and reminders
+
+---
 
 ## 🚀 Getting Started
 
 ### 📋 Prerequisites
-- 🐍 [Python 3.x](https://www.python.org/downloads/)
-- 🧪 [Flask](https://flask.palletsprojects.com/)
-- 🗄️ [MongoDB](https://www.mongodb.com/)
-- 🧑‍🤝‍🧑 [face_recognition](https://pypi.org/project/face-recognition/)
-- 🔍 YOLO Model setup for object detection
+- 🐍 Python 3.x
+- 📦 Flask & Flask-SocketIO
+- 🗄️ MongoDB
+- 📷 YOLO model setup
+- 💬 Expo push notification token setup
 
 ### 🔧 Installation
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/RaY8118/LUMI-Backend.git
-   cd LUMI-Backend
-   ```
+```bash
+git clone https://github.com/RaY8118/LUMI-Backend.git
+cd LUMI-Backend
 
-2. **Set up a virtual environment and activate it**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
+python -m venv venv
+source venv/bin/activate  # For Windows: venv\Scripts\activate
 
-3. **Install the required dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+pip install -r requirements.txt
+```
+### ⚙️ Configuration
 
-4. **Configure your MongoDB connection and any necessary environment variables in the `.env` file.**
+* Create a `.env` file for database credentials, secret keys, and token configs.
+* Set up YOLO model weights and config as per their documentation.
 
-5. **Run the Flask development server**:
-   ```bash
-   python3 run.py
-   ```
+### ▶️ Run the server
 
-## 🔗 API Endpoints
+```bash
+python run.py
+```
 
-### 📝 **Reminders**
-- **GET /reminders**: Fetch all reminders
-- **POST /reminders**: Create a new reminder
-- **PUT /reminders/:id**: Update an existing reminder
-- **DELETE /reminders/:id**: Delete a reminder
+---
 
-### 📸 **Face Recognition**
-- **POST /recognize-face**: Upload an image for face recognition
+## 📡 API Endpoints
 
-### 🔍 **Object Detection**
-- **POST /detect-object**: Upload an image for object detection using YOLO
+### 📝 Reminders
 
-### 🌍 **Location Tracking**
-- **POST /location**: Update or track the user's current location
+* `GET /reminders`
+* `POST /reminders`
+* `PUT /reminders/:id`
+* `DELETE /reminders/:id`
+
+### 📸 Face Recognition
+
+* `POST /detect_faces`
+
+### 🔍 Object Detection
+
+* `POST /detect_object`
+
+### 🌍 Location Tracking
+
+* `POST /location`
+
+### 💬 Chatroom
+
+* WebSocket Endpoint: `/chatroom`
+* Custom events for joining rooms, sending messages, and disconnecting
+
+### 🤖 Chatbot
+
+* `POST /assistant`: Send a message to the AI assistant and receive a response
+
+---
 
 ## 🛠️ YOLO Model Setup
 
-You'll need to download and set up the **YOLO model weights and configuration** for object detection. Refer to the official YOLO documentation for setup instructions.
+* Download weights (e.g. `yolov10b.pt`) and config files.
+* Store them in a `/model` folder and load them via your object detection service.
+
+---
+
+
+### 📂 Folder Structure
+
+* **`/app`**: Contains the core logic for features like reminders, location tracking, chat, and more. This includes the implementation of Flask Blueprints for modular API handling.
+
+* **`/config`**: Holds the configuration settings for the application, including environment-specific variables and app settings.
+
+* **`/uploads`**: Stores user-uploaded files, such as profile images or other media for the app.
+
+
+---
 
 ## 🤝 Contributing
 
-1. **Fork the project**
-2. **Create your feature branch** (`git checkout -b feature/YourFeature`)
-3. **Commit your changes** (`git commit -m 'Add some YourFeature'`)
-4. **Push to the branch** (`git push origin feature/YourFeature`)
-5. **Open a pull request**
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to GitHub (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
+---
 
 ## 📜 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for full details.
