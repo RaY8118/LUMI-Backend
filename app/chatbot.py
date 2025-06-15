@@ -39,7 +39,7 @@ def chatbot():
         user_prompt = {"role": "user", "parts": [{"text": user_message}]}
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash", contents=[context_message, user_prompt]
+            model=os.getenv("GEMINI_MODEL"), contents=[context_message, user_prompt]
         )
 
         reply = (

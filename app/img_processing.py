@@ -265,7 +265,7 @@ def detect_objects():
         client = genai.Client(api_key=api_key)
         prompt = "Just state the object name, do not form any sentence."
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=os.getenv("GEMINI_MODEL"),
             contents=[pil_image, prompt],
         )
 
